@@ -1,0 +1,46 @@
+# Footnotes on the official consolidated text (Legislative Department, as on 10 September 2026),
+# written as the blame each line must have. A line matching no entry must blame to `base`.
+# `line` is a substring of exactly one line of the law file. Blank lines are not checked.
+
+base: The Constitution of India
+
+footnotes:
+  # Preamble, footnote 1: Subs. by the Constitution (Forty-second Amendment) Act, 1976, s.2 (w.e.f. 3-1-1977)
+  - file: preamble.md
+    line: SOVEREIGN SOCIALIST SECULAR DEMOCRATIC REPUBLIC
+    act: The Constitution (Forty-second Amendment) Act, 1976
+    section: "2"
+  # Preamble, footnote 2: Subs. by s. 2, ibid. (w.e.f. 3-1-1977)
+  - file: preamble.md
+    line: unity and integrity of the Nation
+    act: The Constitution (Forty-second Amendment) Act, 1976
+    section: "2"
+
+  # Article 15, footnote 1: Added by the Constitution (First Amendment) Act, 1951, s. 2 (w.e.f. 18-6-1951)
+  - file: part-iii/article-015.md
+    line: (4) Nothing in this article or in clause (2) of article 29
+    act: The Constitution (First Amendment) Act, 1951
+    section: "2"
+  # Article 15, footnote 2: Ins. by the Constitution (Ninety-third Amendment) Act, 2005, s. 2 (w.e.f. 20-1-2006)
+  - file: part-iii/article-015.md
+    line: (5) Nothing in this article or in sub-clause (g)
+    act: The Constitution (Ninety-third Amendment) Act, 2005
+    section: "2"
+  # Article 15, footnote 3: Ins. by the Constitution (One Hundred and Third Amendment) Act, 2019, s. 2 (w.e.f. 14-1-2019),
+  # covering clause (6), its sub-clauses and the Explanation
+  - file: part-iii/article-015.md
+    line: (6) Nothing in this article
+    act: The Constitution (One Hundred and Third Amendment) Act, 2019
+    section: "2"
+  - file: part-iii/article-015.md
+    line: (a) any special provision for the advancement of any economically weaker
+    act: The Constitution (One Hundred and Third Amendment) Act, 2019
+    section: "2"
+  - file: part-iii/article-015.md
+    line: (b) any special provision for the advancement of any economically weaker
+    act: The Constitution (One Hundred and Third Amendment) Act, 2019
+    section: "2"
+  - file: part-iii/article-015.md
+    line: Explanation
+    act: The Constitution (One Hundred and Third Amendment) Act, 2019
+    section: "2"
