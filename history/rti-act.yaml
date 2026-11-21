@@ -26,6 +26,18 @@ amendments:
         text: |
           1. (3) The provisions of sub-section (1) of section 4, sub-sections (1) and (2) of section 5, sections 12, 13, 15,16, 24, 27 and 28 shall come into force at once, and the remaining provisions of this Act shall come into force on the one hundred and twentieth day of its enactment.
         files:
+          chapter-i/README.md: |
+            # CHAPTER I
+
+            PRELIMINARY
+          chapter-ii/README.md: |
+            # CHAPTER II
+
+            RIGHT TO INFORMATION AND OBLIGATIONS OF PUBLIC AUTHORITIES
+          chapter-iii/README.md: |
+            # CHAPTER III
+
+            THE CENTRAL INFORMATION COMMISSION
           chapter-iii/section-012.md: |
             # 12. Constitution of Central Information Commission.
 
@@ -60,6 +72,10 @@ amendments:
               - *Provided further that* if the Chief Information Commissioner or an Information Commissioner if, at the time of his appointment is, in receipt of retirement benefits in respect of any previous service rendered in a Corporation established by or under any Central Act or State Act or a Government company owned or controlled by the Central Government or the State Government, his salary in respect of the service as the Chief Information Commissioner or an Information Commissioner shall be reduced by the amount of pension equivalent to the retirement benefits:
               - *Provided also that* the salaries, allowances and other conditions of service of the Chief Information Commissioner and the Information Commissioners shall not be varied to their disadvantage after their appointment.
             - (6) The Central Government shall provide the Chief Information Commissioner and the Information Commissioners with such officers and employees as may be necessary for the efficient performance of their functions under this Act, and the salaries and allowances payable to, and the terms and conditions of service of the officers and other employees appointed for the purpose of this Act shall be such as may be prescribed.
+          chapter-iv/README.md: |
+            # CHAPTER IV
+
+            THE STATE INFORMATION COMMISSION
           chapter-iv/section-015.md: |
             # 15. Constitution of State Information Commission.
 
@@ -94,6 +110,14 @@ amendments:
               - *Provided further that* where the State Chief Information Commissioner or a State Information Commissioner if, at the time of his appointment is, in receipt of retirement benefits in respect of any previous service rendered in a Corporation established by or under any Central Act or State Act or a Government company owned or controlled by the Central Government or the State Government, his salary in respect of the service as the State Chief Information Commissioner or the State Information Commissioner shall be reduced by the amount of pension equivalent to the retirement benefits:
               - *Provided also that* the salaries, allowances and other conditions of service of the State Chief Information Commissioner and the State Information Commissioners shall not be varied to their disadvantage after their appointment.
             - (6) The State Government shall provide the State Chief Information Commissioner and the State Information Commissioners with such officers and employees as may be necessary for the efficient performance of their functions under this Act, and the salaries and allowances payable to and the terms and conditions of service of the officers and other employees appointed for the purpose of this Act shall be such as may be prescribed.
+          chapter-v/README.md: |
+            # CHAPTER V
+
+            POWERS AND FUNCTIONS OF THE INFORMATION COMMISSIONS, APPEAL AND PENALTIES
+          chapter-vi/README.md: |
+            # CHAPTER VI
+
+            MISCELLANEOUS
           chapter-vi/section-024.md: |
             # 24. Act not to apply to certain organisations.
 
@@ -693,11 +717,20 @@ amendments:
             - 26. Strategic Forces Command.
 
   - act: The Right to Information (Amendment) Act, 2019
-    enacted: 2019-08-01          # Act 24 of 2019; assent 1 Aug 2019 (secondary sources; the Act itself not fetched yet). In force 24-10-2019 per DoPT footnotes
-    source: https://rti.dopt.gov.in/Writereaddata/RTI%20Act,%202005%20(Amended)-English%20Version.PDF
+    enacted: 2019-08-01          # Act 24 of 2019; assent 1 Aug 2019 per the Act. In force 24-10-2019 per the DoPT and India Code footnotes
+    gazette: Gazette of India, Extraordinary, Part II, Section 1, No. 43, 1 August 2019
+    source: https://indiacode.gov.in/items/cde4c0cd-51d1-4544-9969-6a78ff40a052
     sections:
       - section: "2"
         in_force: 2019-10-24
+        text: |
+          2. In the Right to Information Act, 2005 (hereinafter referred to as the principal Act), in section 13,—
+          (a) in sub-section (1), for the words "for a term of five years from the date on which he enters upon his office", the words "for such term as may be prescribed by the Central Government" shall be substituted;
+          (b) in sub-section (2), for the words "for a term of five years from the date on which he enters upon his office", the words "for such term as may be prescribed by the Central Government" shall be substituted;
+          (c) for sub-section (5), the following sub-section shall be substituted, namely:—
+          "(5) The salaries and allowances payable to and other terms and conditions of service of the Chief Information Commissioner and the Information Commissioners shall be such as may be prescribed by the Central Government:
+          Provided that the salaries, allowances and other conditions of service of the Chief Information Commissioner or the Information Commissioners shall not be varied to their disadvantage after their appointment:
+          Provided further that the Chief Information Commissioner and the Information Commissioners appointed before the commencement of the Right to Information (Amendment) Act, 2019 shall continue to be governed by the provisions of this Act and the rules made thereunder as if the Right to Information (Amendment) Act, 2019 had not come into force.".
         files:
           chapter-iii/section-013.md: |
             # 13. Term of office and conditions of service.
@@ -712,10 +745,18 @@ amendments:
               - *Provided that* the Chief Information Commissioner or an Information Commissioner may be removed in the manner specified under section 14.
             - (5) The salaries and allowances payable to and other terms and conditions of service of the Chief Information Commissioner and the Information Commissioners shall be such as may be prescribed by the Central Government:
               - *Provided that* the salaries, allowances and other conditions of service of the Chief Information Commissioner or the Information Commissioners shall not be varied to their disadvantage after their appointment:
-              - *Provided further that* the Chief Information Commissioner and the Information Commissioners appointed before the commencement of the Right to Information (Amendment) Act, 2019 (24 of 2019) shall continue to be governed by the provisions of this Act and the rules made thereunder as if the Right to Information (Amendment) Act, 2019 (24 of 2019) had not come into force.
+              - *Provided further that* the Chief Information Commissioner and the Information Commissioners appointed before the commencement of the Right to Information (Amendment) Act, 2019 shall continue to be governed by the provisions of this Act and the rules made thereunder as if the Right to Information (Amendment) Act, 2019 had not come into force.
             - (6) The Central Government shall provide the Chief Information Commissioner and the Information Commissioners with such officers and employees as may be necessary for the efficient performance of their functions under this Act, and the salaries and allowances payable to, and the terms and conditions of service of the officers and other employees appointed for the purpose of this Act shall be such as may be prescribed.
       - section: "3"
         in_force: 2019-10-24
+        text: |
+          3. In section 16 of the principal Act,—
+          (a) in sub-section (1), for the words "for a term of five years from the date on which he enters upon his office", the words "for such term as may be prescribed by the Central Government" shall be substituted;
+          (b) in sub-section (2), for the words "for a term of five years from the date on which he enters upon his office", the words "for such term as may be prescribed by the Central Government" shall be substituted;
+          (c) for sub-section (5), the following sub-section shall be substituted, namely:—
+          "(5) The salaries and allowances payable to and other terms and conditions of service of the State Chief Information Commissioner and the State Information Commissioners shall be such as may be prescribed by the Central Government:
+          Provided that the salaries, allowances and other conditions of service of the State Chief Information Commissioner and the State Information Commissioners shall not be varied to their disadvantage after their appointment:
+          Provided further that the State Chief Information Commissioner and the State Information Commissioners appointed before the commencement of the Right to Information (Amendment) Act, 2019 shall continue to be governed by the provisions of this Act and the rules made thereunder as if the Right to Information (Amendment) Act, 2019 had not come into force.".
         files:
           chapter-iv/section-016.md: |
             # 16. Term of office and conditions of service.
@@ -730,10 +771,14 @@ amendments:
               - *Provided that* the State Chief Information Commissioner or a State Information Commissioner may be removed in the manner specified under section 17.
             - (5) The salaries and allowances payable to and other terms and conditions of service of the State Chief Information Commissioner and the State Information Commissioners shall be such as may be prescribed by the Central Government:
               - *Provided that* the salaries, allowances and other conditions of service of the State Chief Information Commissioner and the State Information Commissioners shall not be varied to their disadvantage after their appointment:
-              - *Provided further that* the State Chief Information Commissioner and the State Information Commissioners appointed before the commencement of the Right to Information (Amendment) Act, 2019 shall continue to be governed by the provisions of this Act and the rules made there under as if the Right to Information (Amendment) Act, 2019 had not come into force.
+              - *Provided further that* the State Chief Information Commissioner and the State Information Commissioners appointed before the commencement of the Right to Information (Amendment) Act, 2019 shall continue to be governed by the provisions of this Act and the rules made thereunder as if the Right to Information (Amendment) Act, 2019 had not come into force.
             - (6) The State Government shall provide the State Chief Information Commissioner and the State Information Commissioners with such officers and employees as may be necessary for the efficient performance of their functions under this Act, and the salaries and allowances payable to and the terms and conditions of service of the officers and other employees appointed for the purpose of this Act shall be such as may be prescribed.
       - section: "4"
         in_force: 2019-10-24
+        text: |
+          4. In section 27 of the principal Act, in sub-section (2), after clause (c), the following clauses shall be inserted, namely:—
+          "(ca) the term of office of the Chief Information Commissioner and Information Commissioners under sub-sections (1) and (2) of section 13 and the State Chief Information Commissioner and State Information Commissioners under sub-sections (1) and (2) of section 16;
+          (cb) the salaries, allowances and other terms and conditions of service of the Chief Information Commissioner and the Information Commissioners under sub-section (5) of section 13 and the State Chief Information Commissioner and the State Information Commissioners under sub-section (5) of section 16;".
         files:
           chapter-vi/section-027.md: |
             # 27. Power to make rules by appropriate Government.
@@ -750,11 +795,13 @@ amendments:
               - (f) any other matter which is required to be, or may be, prescribed.
 
   - act: The Jammu and Kashmir Reorganisation Act, 2019
-    enacted: 2019-08-09          # Act 34 of 2019; assent 9 Aug 2019 (secondary sources). s. 95 and the Fifth Schedule, in force 31-10-2019 per DoPT footnote
-    source: https://rti.dopt.gov.in/Writereaddata/RTI%20Act,%202005%20(Amended)-English%20Version.PDF
+    enacted: 2019-08-09          # Act 34 of 2019; assent 9 Aug 2019 per the Act. s. 95 and the Fifth Schedule, in force 31-10-2019 (the appointed day) per the DoPT and India Code footnotes
+    source: https://indiacode.gov.in/items/0545d74a-2e1e-416f-acd4-7bde099d06d8
     sections:
       - section: "95"
         in_force: 2019-10-31
+        text: |
+          Fifth Schedule, Table-1, entry 95. The Right to Information Act, 2005. In sub-section (2) of section 1, words, “except the State of Jammu and Kashmir” shall be omitted.
         files:
           chapter-i/section-001.md: |
             # 1. Short title, extent and commencement.
@@ -805,11 +852,14 @@ amendments:
             - 26. Strategic Forces Command.
 
   - act: The Digital Personal Data Protection Act, 2023
-    enacted: 2023-08-11          # Act 22 of 2023; assent 11 Aug 2023 (secondary sources). s. 44(3) in force 13-11-2025 per DoPT footnote (G.S.R. 843(E))
-    source: https://rti.dopt.gov.in/Writereaddata/RTI%20Act,%202005%20(Amended)-English%20Version.PDF
+    enacted: 2023-08-11          # Act 22 of 2023; assent 11 Aug 2023 per the Act. s. 44(3) in force 13-11-2025 per DoPT footnote (G.S.R. 843(E)); India Code's s. 8 hasn't caught up
+    source: https://indiacode.gov.in/items/c058fa9f-eaf0-4ca3-98f1-3443b087bca9
     sections:
       - section: "44(3)"
         in_force: 2025-11-13
+        text: |
+          (3) In section 8 of the Right to Information Act, 2005 (22 of 2005), in sub-section (1), for clause (j), the following clause shall be substituted, namely:—
+          “(j) information which relates to personal information;”.
         files:
           chapter-ii/section-008.md: |
             # 8. Exemption from disclosure of information.

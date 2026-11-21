@@ -45,3 +45,16 @@ Things noticed along the way: bugs, contradictions, surprises, dead ends. Append
 - Live: the reader at https://kurianjose7586.github.io/git-blame-the-constitution/, and the law repositories india-law/constitution (5 commits, 77 year tags) and india-law/rti-act (13 commits, 21 tags).
 - **The builds are deterministic across platforms.** The Pages workflow builds on Linux and prints each law's HEAD, and it matched the Windows build that was pushed: constitution 458b82c, rti-act 6cac3cd. So the force-push-free update path in decision 5 holds.
 - GitHub's own blame view of `part-iii/article-015.md` shows the amending act beside each clause, because the commit author is the act (decision 6). No reader needed for the basic demo.
+
+## 2026-11-21 (evening): India Code, re-check and loose ends
+
+- **India Code wasn't down; it moved.** www.indiacode.nic.in now only shows a migration notice; the site is https://indiacode.gov.in, a DSpace 7 repository with a public JSON API (`/server/api/discover/search/objects`, filtered by `act_id` and collection: SECTION, SCHEDULE, PREAMBLE, RULE…). Each section carries its text with footnote markers (`section_page_note`) and its footnotes (`section_footnote`) as HTML. This is what T11 (ingest) should use instead of scraping pages. Its search ranks the principal act below related acts (the central CPC is on page 3 of its own name), and it served one 502 during a 140-request run.
+- **The official consolidations disagree with each other, and with the law.** Re-checking the RTI Act against India Code, word by word:
+  - India Code's s. 8 still has the 2005 clause (j) and no footnote for the DPDP Act, two years after enactment and a year after commencement. DoPT's copy has the change.
+  - India Code's s. 13 heading says "Terms of office" (the Gazette and DoPT: "Term"), and it keeps the old "Provided also that…" proviso after the new s. 13(5), which the 2019 Act replaced in full.
+  - DoPT adds "(24 of 2019)" twice to the new s. 13(5) and writes "there under" in s. 16(5). The 2019 Act has neither. The repository now follows the Act on both.
+  - Everything else is formatting: India Code writes "--" for "—", uses straight quotes and puts spaces before commas.
+- **Neither official consolidation has the latest Second Schedule.** G.S.R. 864(E) of 23 Nov 2023 added CERT-In as entry 27 (widely reported; a CIC decision relies on it). DoPT's copy "as on 18 Nov 2025" and India Code both stop at entry 26. Not in the repository yet: it needs the notification's exact wording, from the e-Gazette.
+- **Assent dates now come from the Acts themselves,** via India Code: 1 Aug 2019 (Act 24 of 2019), 9 Aug 2019 (Act 34 of 2019), 11 Aug 2023 (Act 22 of 2023). The commits now carry each Act's amending text. India Code marks the 2019 Act "Rep., Act 37 of 2023": the routine repeal of spent amending acts, which leaves its amendments in force.
+- **India Code doesn't hold the Second Schedule notifications** as documents (none filed under the RTI Act), and NACIN's 2023 "compendium" of RTI amendments turned out to be office memoranda, not the notifications.
+- **The IBC (Amendment) Act, 2017 is Act 8 of 2018** (assent 18 Jan 2018), and India Code titles it "2018". Year in the short title and year of the Act number can differ, so match amending acts by number and year, not by title.

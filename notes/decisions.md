@@ -40,3 +40,39 @@ Why things are the way they are, including the ones that were reversed. PLAN.md 
 - **Fixtures moved from `tests/indiacode/` to `tests/official/`,** since the sources now include DoPT and the Legislative Department.
 - **Schedules commence with the sections that use them,** and the literal words of a commencement section win over convention (s. 1 of the RTI Act).
 - **The reader cycles eight era colours** (was six); the Second Schedule has seven versions.
+
+## 2026-11-21: Choosing the 20 acts (T9)
+
+Counted from India Code's own footnotes, through its API (one request every two seconds): for each candidate in PLAN M3, the provisions India Code holds, its footnotes, and the distinct amending acts named after "by" in them ("Subs. by Act 24 of 2019"). The counts are a floor, not a census: India Code's footnotes lag (they cite 2 amending acts for the RTI Act, where there are 3), and ordinances and adaptation orders aren't counted.
+
+| Act | Provisions | Footnotes | Amending acts cited | First–last | Before 1950 | Since 2000 | Changes by notification |
+|---|---|---|---|---|---|---|---|
+| Code of Civil Procedure, 1908 | 176 | 249 | 38 | 1909–2019 | 23 | 3 | 0 |
+| Indian Contract Act, 1872 | 269 | 53 | 11 | 1877–2019 | 7 | 2 | 0 |
+| Transfer of Property Act, 1882 | 149 | 174 | 23 | 1885–2019 | 16 | 3 | 1 |
+| Negotiable Instruments Act, 1881 | 156 | 70 | 21 | 1885–2018 | 12 | 3 | 0 |
+| Specific Relief Act, 1963 | 49 | 22 | 3 | 1964–2019 | 0 | 2 | 0 |
+| Limitation Act, 1963 | 33 | 25 | 3 | 1969–2019 | 0 | 1 | 0 |
+| Hindu Marriage Act, 1955 | 37 | 55 | 9 | 1964–2019 | 0 | 4 | 0 |
+| Representation of the People Act, 1951 | 205 | 348 | 39 | 1951–2021 | 0 | 14 | 0 |
+| Motor Vehicles Act, 1988 | 259 | 256 | 8 | 1988–2026 | 0 | 6 | 0 |
+| Prevention of Corruption Act, 1988 | 35 | 32 | 3 | 2014–2019 | 0 | 3 | 0 |
+| Arbitration and Conciliation Act, 1996 | 114 | 53 | 3 | 2016–2021 | 0 | 3 | 0 |
+| Foreign Exchange Management Act, 1999 | 52 | 28 | 4 | 2015–2019 | 0 | 4 | 0 |
+| Information Technology Act, 2000 | 129 | 131 | 4 | 2002–2023 | 0 | 4 | 5 |
+| Prevention of Money-Laundering Act, 2002 | 82 | 125 | 9 | 2005–2019 | 0 | 9 | 0 |
+| Right to Information Act, 2005 | 33 | 6 | 2 | 2019–2019 | 0 | 2 | 0 |
+| Protection of Children from Sexual Offences Act, 2012 | 48 | 24 | 4 | 2013–2019 | 0 | 4 | 0 |
+| Companies Act, 2013 | 534 | 459 | 6 | 2015–2020 | 0 | 6 | 12 |
+| Insolvency and Bankruptcy Code, 2016 | 294 | 118 | 6 | 2018–2021 | 0 | 6 | 1 |
+| Central Goods and Services Tax Act, 2017 | 191 | 252 | 14 | 2017–2025 | 0 | 14 | 0 |
+| Consumer Protection Act, 2019 | 107 | 2 | 1 | 2021–2021 | 0 | 1 | 0 |
+
+What it says about M3:
+
+- **Three tiers of difficulty.** The four colonial-era acts (CPC, Contract, Transfer of Property, Negotiable Instruments) carry 58 pre-1950 amending acts between them, so scans and OCR. The Representation of the People Act has the most amending acts (39) but all after 1950. Everything enacted since 1988 is amended only by born-digital acts.
+- **Notifications matter beyond the RTI Act.** The Companies Act (12 footnotes), the IT Act (5) and the IBC (1) have changes made by notification, so the `Instrument` path from T7 will be needed in M3.
+- **Born-digital, checked on samples:** India Code's copies of the IBC (Amendment) Act (Act 8 of 2018) and the POCSO (Amendment) Act, 2019 have full text layers.
+- **The list of 20 stands as drafted in PLAN.** None is missing from India Code; the Consumer Protection Act, 2019 has barely been amended (1 act) and could make way for a busier act if M3 needs one.
+
+**M1's three reconstruction acts (recommended, to confirm at the start of M1):** the Insolvency and Bankruptcy Code, 2016 (6 amending acts, 294 provisions), the POCSO Act, 2012 (4 amending acts) and the Arbitration and Conciliation Act, 1996 (3 amending acts, including the large 2015 rewrite). All their amendments date from 2013 on, so the engine and baseline get tested on clean digital text first, as PLAN's risk table advises; the colonial acts come in M3.

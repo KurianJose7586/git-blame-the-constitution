@@ -74,11 +74,15 @@ async function home(app) {
 }
 
 function toc(app, law) {
-  const groups = new Map();
+  const groups = new Map(), titles = {};
   for (const f of law.files) {
     const folder = f.path.includes("/") ? f.path.slice(0, f.path.lastIndexOf("/"))
       : f.path.startsWith("schedule") ? "Schedules" : "";
     if (!groups.has(folder)) groups.set(folder, []);
+    if (f.path.endsWith("/README.md")) {  // a folder's heading, e.g. "CHAPTER III — THE CENTRAL INFORMATION COMMISSION"
+      titles[folder] = latest(f).split("\n").filter((l) => l.trim()).map((l) => l.replace(/^# /, "")).join(" — ");
+      continue;
+    }
     groups.get(folder).push(f);
   }
   const touched = {};
@@ -86,7 +90,7 @@ function toc(app, law) {
   const fileLink = (f, extra = {}) => route({ law: law.law, file: id(f), ...extra });
   app.innerHTML = `<h1>${esc(law.title)}</h1>
     ${[...groups].sort(([a], [b]) => (a === "" ? -1 : b === "" ? 1 : 0)).map(([folder, files]) => `
-      ${folder ? `<h2 class="sub">${esc(part(folder))}</h2>` : ""}
+      ${folder ? `<h2 class="sub">${esc(titles[folder] || part(folder))}</h2>` : ""}
       <ul class="toc">${files.map((f) => `<li><a href="${fileLink(f)}">${esc(heading(f))}<small>${esc(f.path)}</small></a></li>`).join("")}</ul>`).join("")}
     <h2 class="sub">Amendments, in order of enactment</h2>
     <ol class="timeline">${law.commits.map((c, i) => `<li>

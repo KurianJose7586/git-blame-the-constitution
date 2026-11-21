@@ -7,6 +7,10 @@
 #   out of order; it is put back in reading order, with a slash between the alternatives.
 # - preamble.txt "expendient" and chapter-ii/section-004.txt "suomotu" are typos in DoPT's copy. The 2005
 #   Gazette has "expedient" and "suo motu", and no amendment touched either, so the fixtures follow the Gazette.
+# - chapter-iii/section-013.txt: DoPT adds "(24 of 2019)" twice to the second proviso of s. 13(5), and
+#   chapter-iv/section-016.txt has "there under". Section 2 and 3 of the Right to Information (Amendment) Act,
+#   2019, which inserted that text, have neither, so the fixtures follow the Act.
+# - chapter-*/README.txt: the chapter headings ("CHAPTER III" and its title), from the same text.
 
 base: The Right to Information Act, 2005
 

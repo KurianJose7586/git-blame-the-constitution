@@ -28,7 +28,7 @@ Acceptance criteria for each one are in [DELIVERABLES.md](DELIVERABLES.md).
 
 ## Status
 
-M0 in progress. KICKOFF.md tasks T1–T8 are done: the Constitution's Preamble and Article 15, and the whole Right to Information Act, 2005 (13 commits, including six Second Schedule notifications), build into git repositories whose blame matches the official footnotes. They're public, and reader v0 reads, blames and diffs them on any date.
+M0 in progress. KICKOFF.md tasks T1–T9 are done: the Constitution's Preamble and Article 15, and the whole Right to Information Act, 2005 (13 commits, including six Second Schedule notifications), build into git repositories whose blame matches the official footnotes. They're public, and reader v0 reads, blames and diffs them on any date. Left for the M0 gate: the hand checks in [notes/m0-gate.md](notes/m0-gate.md), and entry 27 of the RTI Act's Second Schedule (CERT-In, G.S.R. 864(E) of 2023), which needs the e-Gazette copy of the notification.
 
 - Reader: https://kurianjose7586.github.io/git-blame-the-constitution/
 - [india-law/constitution](https://github.com/india-law/constitution) ([blame on Article 15](https://github.com/india-law/constitution/blame/main/part-iii/article-015.md))
