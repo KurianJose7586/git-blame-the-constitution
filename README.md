@@ -46,6 +46,12 @@ python -m http.server 8123 --directory reader
 
 The same two commands work for `constitution`.
 
+M1 has started: the edit operations and executor (`engine/ops.py`), a first regex baseline (`engine/baseline.py`), and a replay of M0's history through both, which reproduces 12 of its 16 amendments exactly and 15 word for word ([notes/results.md](notes/results.md)):
+
+```
+uv run engine/replay.py history/constitution.yaml history/rti-act.yaml
+```
+
 Tests: `uv run pytest` and `node --test reader/app.test.mjs`.
 
 ## First week

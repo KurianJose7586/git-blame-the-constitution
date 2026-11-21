@@ -7,7 +7,7 @@ dependencies = [
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["publish"]
+pythonpath = ["publish", "engine"]
 testpaths = ["tests"]
 
 [dependency-groups]

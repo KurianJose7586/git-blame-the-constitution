@@ -67,3 +67,9 @@ Things noticed along the way: bugs, contradictions, surprises, dead ends. Append
 - **Entry 8 contains words no notification enacted.** The 2005 Act printed "8. Special Prontier Force." G.S.R. 319(E) of 2021 says only "in serial number 8 for the word “Prontier”, the word “Frontier” shall be substituted". Yet DoPT's copy and India Code both read "8. Special Frontier Force of the Cabinet Secretariat." The repository follows the instruments: "8. Special Frontier Force." (A corrigendum could explain it; none is listed.)
 - **Entry 27 (CERT-In) is now in the repository,** from the notification itself, in force 23 Nov 2023. Both official consolidations still lack it two years on.
 - **Punctuation-only differences are noted, not applied.** G.S.R. 726(E) and 673(E) close the quote before the full stop ("26. Strategic Forces Command".), where the consolidations print a full stop on the entry. The repository keeps the consolidated form; it follows the primary text where the words differ.
+
+## 2026-11-21: First engine run (T14, T16, T17)
+
+- **The engine turns an interpretive dispute into a one-line diff.** Applied literally, s. 44(3) of the DPDP Act replaces clause (j) of RTI s. 8(1) and leaves the proviso that followed it; DoPT's consolidated text drops the proviso. A reader could show both readings, labelled, instead of silently picking one. Worth a paragraph in the paper.
+- **Indian drafting in M0 needed only seven patterns:** for/after/omit the words, for/after/omit a provision (sub-section, clause, serial number, S.No.), and "the following … shall be added". Notifications number entries "(15)" where the Schedule prints "15.", so the executor converts when the target is a Schedule.
+- **Keeping blocks as the amending text's own lines worked:** every block's depth came out right from labels alone, including (6)(a), (6)(b) and the Explanation in Article 15, and the provisos of RTI s. 13(5).

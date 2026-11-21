@@ -80,3 +80,11 @@ What it says about M3:
 ## 2026-11-21: The primary text wins on words, not on punctuation
 
 Where an official consolidation disagrees with the instrument that made the change (the Gazette, the amending Act, the notification), the repository follows the instrument when the words differ: "(24 of 2019)", "thereunder", "of the Cabinet Secretariat", entry 27. Where only punctuation differs (a full stop inside or outside the closing quote), it keeps the consolidated form and notes the difference. Every deviation from the official fixture is listed in that fixture's footnotes.yaml.
+
+## 2026-11-21: Starting M1
+
+- **Decision 9 confirmed: edit operations are JSON.** One object per operation, `{"op": ..., "target": ...}`, described by `engine/ops.schema.json`; the same schema will drive constrained decoding in M2.
+- **M1's three reconstruction acts confirmed:** the Insolvency and Bankruptcy Code, 2016, the POCSO Act, 2012 and the Arbitration and Conciliation Act, 1996.
+- **One `engine/` folder instead of PLAN §6's `parse/`, `dsl/` and `baseline/`.** They're a few hundred lines between them and change together; split them when one grows.
+- **A block is the amending text's own lines, not our Markdown.** `SUBSTITUTE_NODE` and friends carry the inserted provisions verbatim, one provision per line, and the executor works out depth and formatting. The model in M2 only has to copy text, never indent it.
+- **Targets are written the way lawyers cite them**, with the file's own short form: `art.15(4)`, `s.13(5)`, `s.8(1)(j)`, `sch.2(8)`, `preamble`; unlabelled provisions as `s.13(1)/proviso`, `s.13(2)/proviso2`, `art.15(6)/explanation`.
