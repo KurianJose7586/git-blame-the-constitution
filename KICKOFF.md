@@ -36,7 +36,7 @@ M0 layout, a subset of PLAN §6:
 history/   constitution.yaml, rti-act.yaml
 publish/   build_repo.py, export.py
 reader/    index.html, app.js, app.test.mjs
-tests/     test_publish.py, indiacode/ (current text copied from India Code)
+tests/     test_publish.py, official/ (the current official text, as extracted)
 notes/     papers.md, results.md, observations.md, decisions.md
 ```
 
@@ -154,9 +154,9 @@ Source: https://…
 | # | Task | Done when |
 |---|---|---|
 | T1 | Code repository: `git init`, a `uv` project (`pyyaml`, with `pytest` as a dev dependency), `.gitignore`, `notes/` with its four files, and the decisions above copied into `decisions.md` | `uv run pytest` runs |
-| T2 | `history/constitution.yaml`: the Preamble and Article 15 in five commits. These are the text as adopted; the First Amendment, s. 2 (18 Jun 1951); the 42nd, s. 2 (enacted 18 Dec 1976, in force 3 Jan 1977); the 93rd, s. 2 (20 Jan 2006); and the 103rd, s. 2 (enacted 12 Jan 2019, in force 14 Jan 2019). Paste India Code's current text into `tests/indiacode/`, and write its footnotes down as the table of expected blame | The file loads and every date has a source |
+| T2 | `history/constitution.yaml`: the Preamble and Article 15 in five commits. These are the text as adopted; the First Amendment, s. 2 (18 Jun 1951); the 42nd, s. 2 (enacted 18 Dec 1976, in force 3 Jan 1977); the 93rd, s. 2 (20 Jan 2006); and the 103rd, s. 2 (enacted 12 Jan 2019, in force 14 Jan 2019). Paste India Code's current text into `tests/official/`, and write its footnotes down as the table of expected blame | The file loads and every date has a source |
 | T3 | `publish/build_repo.py <history> <out>`: refuses an existing `<out>`, writes the files, commits with trailers, sets dates and identities, tags years, adds the README | The constitution build passes T4 |
-| T4 | `tests/test_publish.py` builds into a temp folder and checks four things. (a) The current text has the same words as `tests/indiacode/`, ignoring layout and markup. (b) Every line's blame matches the footnote table. (c) Two builds give the same HEAD hash. (d) The year tags fall on the right side of the 42nd Amendment | Passes, and breaking any footnote makes it fail |
+| T4 | `tests/test_publish.py` builds into a temp folder and checks four things. (a) The current text has the same words as `tests/official/`, ignoring layout and markup. (b) Every line's blame matches the footnote table. (c) Two builds give the same HEAD hash. (d) The year tags fall on the right side of the 42nd Amendment | Passes, and breaking any footnote makes it fail |
 | T5 | `publish/export.py <repo> <out.json>`, following contract 4 | The reader loads its output, and date selection gives the right Preamble on 2 Jan 1977 and 3 Jan 1977, and on 20 Dec 1976 as published |
 | T6 | Reader v0: `index.html` and `app.js`, with no build step. **Read:** a table of contents, then any file as in force or as published on a date, using a native `<input type="date">` plus a slider over the amendment dates. **Blame:** era colours, and hovering or tapping a block shows its commit card, as in the mockup. **Diff:** word level between two dates, using jsdiff pinned on a CDN. Hash routes are the permanent links. Every view has the disclaimer and the official link. Start from the mockup's styles. `node --test` covers the date-selection function | All three views work on the constitution data at 375 px wide, and `node --test` passes |
 | T7 | `history/rti-act.yaml`: the enacted text (Act 22 of 2005) goes in as two commits, one per commencement date in s. 1(3), then each amendment. Take the enacted wording from the Gazette copy; India Code's footnotes give the replaced words. The expected amendments, to confirm on India Code, are: the RTI (Amendment) Act, 2019 (Act 24 of 2019), ss. 2–4, on ss. 13, 16 and 27; the Digital Personal Data Protection Act, 2023, s. 44(3), on s. 8(1)(j), checking its commencement notification; whether the Jammu and Kashmir Reorganisation Act, 2019 touched s. 1(2); and the Second Schedule notifications (see "Needs you") | T4's checks pass for the RTI Act too |
@@ -192,7 +192,7 @@ These are rougher; refine them at the M0 gate. Folder names follow PLAN §6.
 | What | Blocks | When |
 |---|---|---|
 | Confirm or change the decisions above | T1 | Now |
-| The RTI Act's Second Schedule is amended by government notifications under s. 24(2), not by amending acts (the CBI was added this way in 2011). PLAN keeps such instruments out of the commits, but then the repository won't match India Code. Recommended: commit them with an `Instrument: notification` trailer. The alternative is a different small act for M0 | T7 | Before T7 |
+| **Decided 21 Nov 2026: commit them with an `Instrument: notification` trailer.** The RTI Act's Second Schedule is amended by government notifications under s. 24(2), not by amending acts (the CBI was added this way in 2011). PLAN keeps such instruments out of the commits, but then the repository won't match India Code. Recommended: commit them with an `Instrument: notification` trailer. The alternative is a different small act for M0 | T7 | Before T7 |
 | Pick the organisation name, then create it and the two law repositories | T8 | Week 2 |
 | Ask your mentor for a law-faculty contact, for reviewers and the section 52(1)(q) question | The public launch at M3, not M0 | Week 1 |
 

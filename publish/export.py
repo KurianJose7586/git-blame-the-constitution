@@ -37,7 +37,8 @@ def export(repo, out):
         sha, message = record.strip().split("\x00")
         t, text = parse(message)
         commits.append({
-            "sha": sha, "act": t["Amending-Act"], "section": t.get("Section"), "gazette": t.get("Gazette"),
+            "sha": sha, "act": t["Amending-Act"], "instrument": t.get("Instrument"),
+            "section": t.get("Section"), "gazette": t.get("Gazette"),
             "enacted": t["Enacted"], "in_force": None if t["In-Force"] == "unknown" else t["In-Force"],
             "retrospective": t["Retrospective"] == "yes", "source": t["Source"], "text": text,
         })

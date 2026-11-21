@@ -31,3 +31,12 @@ Why things are the way they are, including the ones that were reversed. PLAN.md 
 - **`export.py` also writes `laws.json`,** the list of laws for the home page, from whatever law JSON sits beside it.
 - **No framework or build step.** Plain ES module, one HTML file with inline CSS, jsdiff 5.2.0 from jsDelivr for word diffs. `reader/package.json` only tells Node that `app.js` is a module, for the tests. The jsdiff tag has no integrity hash yet: add one before the public launch.
 - **The slider re-renders on release (`change`), not while dragging,** because re-rendering replaces the slider mid-drag.
+
+## 2026-11-21: The RTI Act (T7)
+
+- **Notifications that amend an Act are commits,** with `instrument: notification` in the history file and an `Instrument: notification` trailer (decided over PLAN's "notes, not commits", so the repository matches the official text). Their in-force date is the date of publication, since s. 24(2) gives effect on publication.
+- **Omitted text simply disappears from our files.** No "* * *" placeholders: git shows the omission. The official-text check treats a consolidated copy's placeholders ("7. ***.", "India ***.") and amendment brackets as absent, and rejoins words broken across a line after a hyphen.
+- **Where the official consolidated copy and the Gazette disagree on text no amendment touched, follow the Gazette,** and say so in the fixture's notes (two cases in the RTI Act).
+- **Fixtures moved from `tests/indiacode/` to `tests/official/`,** since the sources now include DoPT and the Legislative Department.
+- **Schedules commence with the sections that use them,** and the literal words of a commencement section win over convention (s. 1 of the RTI Act).
+- **The reader cycles eight era colours** (was six); the Second Schedule has seven versions.

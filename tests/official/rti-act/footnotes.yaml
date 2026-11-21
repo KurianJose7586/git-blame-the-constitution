@@ -1,0 +1,138 @@
+# Footnotes on DoPT's consolidated text ("The Right to Information Act, 2005 [As on the 18th November, 2025]"),
+# written as the blame each line must have. A line matching no entry must blame to `base`.
+# `line` is a substring of exactly one line of the law file. Blank lines are not checked.
+#
+# The fixtures beside this file are that text as extracted, with footnote numbers removed. Hand fixes:
+# - schedule-1.txt: the extraction puts the stacked alternative "swear in the name of God / solemnly affirm"
+#   out of order; it is put back in reading order, with a slash between the alternatives.
+# - preamble.txt "expendient" and chapter-ii/section-004.txt "suomotu" are typos in DoPT's copy. The 2005
+#   Gazette has "expedient" and "suo motu", and no amendment touched either, so the fixtures follow the Gazette.
+
+base: The Right to Information Act, 2005
+
+footnotes:
+  # s. 1, footnote 1: The words "except the State of Jammu and Kashmir" omitted by Act 34 of 2019, s. 95 and the
+  # Fifth Schedule (w.e.f. 31-10-2019)
+  - file: chapter-i/section-001.md
+    line: (2) It extends to the whole of India
+    act: The Jammu and Kashmir Reorganisation Act, 2019
+    section: "95"
+
+  # s. 8, footnote 1: Subs. by Act 22 of 2023, s. 44 for clause (j) (w.e.f. 13-11-2025)
+  - file: chapter-ii/section-008.md
+    line: (j) information which relates to personal information
+    act: The Digital Personal Data Protection Act, 2023
+    section: "44(3)"
+
+  # s. 13, footnote 1 (twice): Subs. by Act 24 of 2019, s. 2, for "for a term of five years from the date on which
+  # he enters upon his office"; footnote 2: Subs. by s. 2, ibid., for sub-section (5) (both w.e.f. 24-10-2019)
+  - file: chapter-iii/section-013.md
+    line: (1) The Chief Information Commissioner shall hold office
+    act: The Right to Information (Amendment) Act, 2019
+    section: "2"
+  - file: chapter-iii/section-013.md
+    line: (2) Every Information Commissioner shall hold office
+    act: The Right to Information (Amendment) Act, 2019
+    section: "2"
+  - file: chapter-iii/section-013.md
+    line: (5) The salaries and allowances
+    act: The Right to Information (Amendment) Act, 2019
+    section: "2"
+  - file: chapter-iii/section-013.md
+    line: Provided that* the salaries, allowances and other conditions of service
+    act: The Right to Information (Amendment) Act, 2019
+    section: "2"
+  - file: chapter-iii/section-013.md
+    line: Provided further that* the Chief Information Commissioner and the Information Commissioners appointed before
+    act: The Right to Information (Amendment) Act, 2019
+    section: "2"
+
+  # s. 16, footnotes as for s. 13, made by s. 3 of the same Act
+  - file: chapter-iv/section-016.md
+    line: (1) The State Chief Information Commissioner shall hold office
+    act: The Right to Information (Amendment) Act, 2019
+    section: "3"
+  - file: chapter-iv/section-016.md
+    line: (2) Every State Information Commissioner shall hold office
+    act: The Right to Information (Amendment) Act, 2019
+    section: "3"
+  - file: chapter-iv/section-016.md
+    line: (5) The salaries and allowances
+    act: The Right to Information (Amendment) Act, 2019
+    section: "3"
+  - file: chapter-iv/section-016.md
+    line: Provided that* the salaries, allowances and other conditions of service
+    act: The Right to Information (Amendment) Act, 2019
+    section: "3"
+  - file: chapter-iv/section-016.md
+    line: Provided further that* the State Chief Information Commissioner and the State Information Commissioners appointed before
+    act: The Right to Information (Amendment) Act, 2019
+    section: "3"
+
+  # s. 27, footnote 1: Ins. by Act 24 of 2019, s. 4 (w.e.f. 24-10-2019), covering clauses (ca) and (cb)
+  - file: chapter-vi/section-027.md
+    line: (ca) the term of office
+    act: The Right to Information (Amendment) Act, 2019
+    section: "4"
+  - file: chapter-vi/section-027.md
+    line: (cb) the salaries, allowances
+    act: The Right to Information (Amendment) Act, 2019
+    section: "4"
+
+  # Second Schedule, footnotes 1-10
+  - file: schedule-2.md
+    line: 2. Research and Analysis Wing    # 1. Subs. by G.S.R. 319(E), dated 4-5-2021
+    act: Notification No. G.S.R. 319(E), dated 4 May 2021
+    section: null
+  - file: schedule-2.md
+    line: 8. Special Frontier Force        # 3. Subs. by G.S.R. 319(E) (serial 7, omitted by footnote 2, has no line)
+    act: Notification No. G.S.R. 319(E), dated 4 May 2021
+    section: null
+  - file: schedule-2.md
+    line: 15. Sashtra Seema Bal            # 4. Subs. by G.S.R. 347, dated 28-9-2005
+    act: Notification No. G.S.R. 347, dated 28 September 2005
+    section: null
+  - file: schedule-2.md
+    line: 16. Directorate General          # 5. Subs. by G.S.R. 235(E) dated 27-3-2008
+    act: Notification No. G.S.R. 235(E), dated 27 March 2008
+    section: null
+  - file: schedule-2.md
+    line: 17. National Technical           # 5.
+    act: Notification No. G.S.R. 235(E), dated 27 March 2008
+    section: null
+  - file: schedule-2.md
+    line: 18. Financial Intelligence Unit  # 5.
+    act: Notification No. G.S.R. 235(E), dated 27 March 2008
+    section: null
+  - file: schedule-2.md
+    line: 19. Special Protection Group     # 6. Ins. by G.S.R. 347, dated 28-9-2005
+    act: Notification No. G.S.R. 347, dated 28 September 2005
+    section: null
+  - file: schedule-2.md
+    line: 20. Defence Research             # 6.
+    act: Notification No. G.S.R. 347, dated 28 September 2005
+    section: null
+  - file: schedule-2.md
+    line: 21. Border Road Development      # 6. (the entry after it, omitted by footnote 7, has no line)
+    act: Notification No. G.S.R. 347, dated 28 September 2005
+    section: null
+  - file: schedule-2.md
+    line: 22. National Security Council    # 8. Added by G.S.R. 726(E), dated 8-10-2008
+    act: Notification No. G.S.R. 726(E), dated 8 October 2008
+    section: null
+  - file: schedule-2.md
+    line: 23. Central Bureau               # 9. Added by G.S.R. 442(E), dated 9-6-2011
+    act: Notification No. G.S.R. 442(E), dated 9 June 2011
+    section: null
+  - file: schedule-2.md
+    line: 24. National Investigation       # 9.
+    act: Notification No. G.S.R. 442(E), dated 9 June 2011
+    section: null
+  - file: schedule-2.md
+    line: 25. National Intelligence Grid   # 9.
+    act: Notification No. G.S.R. 442(E), dated 9 June 2011
+    section: null
+  - file: schedule-2.md
+    line: 26. Strategic Forces             # 10. Ins. by G.S.R. 673(E) dated 8-7-2016
+    act: Notification No. G.S.R. 673(E), dated 8 July 2016
+    section: null

@@ -39,7 +39,11 @@ const fmt = (d) => d
 const label = (c) => c.act.replace(/^The Constitution \((.+)\) Act, \d{4}$/, "$1") + (c.section ? `, s. ${c.section}` : "");
 const id = (f) => f.path.slice(0, -3);
 const latest = (f) => [...f.versions].reverse().find((v) => v.text)?.text ?? "";
-const heading = (f) => latest(f).split("\n")[0].replace(/^# /, "");
+const heading = (f) => {
+  const first = latest(f).split("\n")[0];
+  const name = id(f).split("/").pop().replace(/-/g, " ");
+  return first.startsWith("# ") ? first.slice(2) : name[0].toUpperCase() + name.slice(1);
+};
 const part = (folder) => folder.replace(/^(\w)(\w*)-(\w+)$/, (_, a, b, n) => `${a.toUpperCase()}${b} ${n.toUpperCase()}`);
 
 // The law files use a small Markdown subset: "# heading", nested "- " lists for depth, "*emphasis*".
@@ -72,7 +76,8 @@ async function home(app) {
 function toc(app, law) {
   const groups = new Map();
   for (const f of law.files) {
-    const folder = f.path.includes("/") ? f.path.slice(0, f.path.lastIndexOf("/")) : "";
+    const folder = f.path.includes("/") ? f.path.slice(0, f.path.lastIndexOf("/"))
+      : f.path.startsWith("schedule") ? "Schedules" : "";
     if (!groups.has(folder)) groups.set(folder, []);
     groups.get(folder).push(f);
   }
@@ -109,7 +114,7 @@ function read(app, law, file, r) {
   const v = versionAt(law, file, date, r.mode);
   const c = v && law.commits[v.commit];
   const status = v?.text
-    ? `${c.section ? `Text as amended by <b>${esc(label(c))}</b>` : "Original text"}: enacted ${fmt(c.enacted)}, in force ${fmt(c.in_force)}.`
+    ? `${v === file.versions[0] ? "Original text" : `Text as amended by <b>${esc(label(c))}</b>`}: enacted ${fmt(c.enacted)}, in force ${fmt(c.in_force)}.`
     : v ? `Omitted by ${esc(label(c))}.`
     : r.mode === "in_force" && versionAt(law, file, date, "enacted")
       ? `Enacted but not in force on ${fmt(date)}. <a href="${route({ ...r, date, mode: "enacted" })}">Read it as published</a>.`
@@ -143,7 +148,7 @@ function blame(app, law, file, r) {
   const lines = text.split("\n");
   if (lines.at(-1) === "") lines.pop();
   const eras = file.versions.map((v) => v.commit);
-  const colour = (i) => `var(--era${(eras.indexOf(i) % 6) + 1})`;
+  const colour = (i) => `var(--era${(eras.indexOf(i) % 8) + 1})`; // ponytail: 8 colours, cycles beyond that
   const blocks = [];
   lines.forEach((l, n) => {
     const c = file.blame[n];

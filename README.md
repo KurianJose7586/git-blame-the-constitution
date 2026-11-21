@@ -28,15 +28,17 @@ Acceptance criteria for each one are in [DELIVERABLES.md](DELIVERABLES.md).
 
 ## Status
 
-M0 in progress. KICKOFF.md tasks T1–T6 are done: the Preamble and Article 15 build into a git repository whose blame matches the official footnotes, and reader v0 reads, blames and diffs them on any date.
+M0 in progress. KICKOFF.md tasks T1–T7 are done: the Constitution's Preamble and Article 15, and the whole Right to Information Act, 2005 (13 commits, including six Second Schedule notifications), build into git repositories whose blame matches the official footnotes. Reader v0 reads, blames and diffs them on any date.
 
-Build the repository and the reader's data, then serve the reader at http://localhost:8123:
+Build each repository and the reader's data, then serve the reader at http://localhost:8123:
 
 ```
-uv run publish/build_repo.py history/constitution.yaml out/constitution
-uv run publish/export.py out/constitution reader/data/constitution.json
+uv run publish/build_repo.py history/rti-act.yaml out/rti-act
+uv run publish/export.py out/rti-act reader/data/rti-act.json
 python -m http.server 8123 --directory reader
 ```
+
+The same two commands work for `constitution`.
 
 Tests: `uv run pytest` and `node --test reader/app.test.mjs`.
 

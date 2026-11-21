@@ -18,7 +18,13 @@ LAWS = sorted(p.stem for p in (ROOT / "history").glob("*.yaml"))
 def words(text):
     # Compare words only: drop our Markdown markup, and treat dashes as spaces so a run-in
     # heading ("birth.—(1) The State") matches ours on two lines ("birth." / "- (1) The State").
-    text = re.sub(r"^\s*[#-] ", "", text, flags=re.M).replace("*", "").replace("—", " ")
+    # Official consolidated texts mark omissions ("7. ***." for an entry, "India ***." for words) and
+    # amendments ("[...]"); our files simply leave omitted text out.
+    text = re.sub(r"(\w)-[ \t]*\n\s*", r"\1-", text)  # a word broken after its hyphen: "sub-" / "section"
+    text = re.sub(r"^\s*\d+\.\s*\*[\s*]*\.?\s*$", "", text, flags=re.M)
+    text = re.sub(r"\s*\*\s*\*\s*\*[\s*]*", "", text)
+    text = re.sub(r"^\s*[#-] ", "", text, flags=re.M)
+    text = re.sub(r"[*\[\]]", "", text).replace("—", " ")
     return " ".join(text.split())
 
 
@@ -43,7 +49,7 @@ def built(tmp_path_factory):
 
 @pytest.mark.parametrize("law", LAWS)
 def test_matches_official_text(built, law):
-    repo, official = built[law], ROOT / "tests" / "indiacode" / law
+    repo, official = built[law], ROOT / "tests" / "official" / law
     expected = {t.relative_to(official).with_suffix(".md").as_posix(): t for t in official.rglob("*.txt")}
     assert sorted(expected) == sorted(law_files(repo)), "every law file needs an official copy, and vice versa"
     for path, txt in expected.items():
@@ -53,7 +59,7 @@ def test_matches_official_text(built, law):
 @pytest.mark.parametrize("law", LAWS)
 def test_blame_matches_footnotes(built, law):
     repo = built[law]
-    table = yaml.safe_load((ROOT / "tests" / "indiacode" / law / "footnotes.yaml").read_text(encoding="utf-8"))
+    table = yaml.safe_load((ROOT / "tests" / "official" / law / "footnotes.yaml").read_text(encoding="utf-8"))
     acts = provenance(repo)
     used = set()
     for path in law_files(repo):
@@ -64,7 +70,7 @@ def test_blame_matches_footnotes(built, law):
             assert len(hits) <= 1, f"{path}: several footnotes match {line!r}"
             used.update(hits)
             f = table["footnotes"][hits[0]] if hits else None
-            want = (f["act"], str(f["section"])) if f else (table["base"], None)
+            want = (f["act"], f["section"] and str(f["section"])) if f else (table["base"], None)
             assert acts[sha] == want, f"{path}: {line[:60]!r}"
     unused = [table["footnotes"][i]["line"] for i in range(len(table["footnotes"])) if i not in used]
     assert not unused, f"footnotes that match no line: {unused}"

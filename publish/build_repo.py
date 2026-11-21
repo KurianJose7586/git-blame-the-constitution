@@ -44,6 +44,7 @@ def message(act, sec):
     in_force = sec.get("in_force")
     trailers = {
         "Amending-Act": act["act"],
+        "Instrument": act.get("instrument"),  # e.g. "notification" when the change isn't made by an Act
         "Section": section,
         "Gazette": act.get("gazette"),
         "Enacted": act["enacted"],
