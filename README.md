@@ -28,7 +28,13 @@ Acceptance criteria for each one are in [DELIVERABLES.md](DELIVERABLES.md).
 
 ## Status
 
-M0 in progress. KICKOFF.md tasks T1–T7 are done: the Constitution's Preamble and Article 15, and the whole Right to Information Act, 2005 (13 commits, including six Second Schedule notifications), build into git repositories whose blame matches the official footnotes. Reader v0 reads, blames and diffs them on any date.
+M0 in progress. KICKOFF.md tasks T1–T8 are done: the Constitution's Preamble and Article 15, and the whole Right to Information Act, 2005 (13 commits, including six Second Schedule notifications), build into git repositories whose blame matches the official footnotes. They're public, and reader v0 reads, blames and diffs them on any date.
+
+- Reader: https://kurianjose7586.github.io/git-blame-the-constitution/
+- [india-law/constitution](https://github.com/india-law/constitution) ([blame on Article 15](https://github.com/india-law/constitution/blame/main/part-iii/article-015.md))
+- [india-law/rti-act](https://github.com/india-law/rti-act)
+
+![Blame on Article 15 in the reader: 1950, 1951, 2006 and 2019 in four colours](screenshots/blame-article-15.jpg)
 
 Build each repository and the reader's data, then serve the reader at http://localhost:8123:
 

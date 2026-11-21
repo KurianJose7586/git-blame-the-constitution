@@ -39,3 +39,9 @@ Things noticed along the way: bugs, contradictions, surprises, dead ends. Append
 - **Assent dates for the three amending acts come from secondary sources** (1 Aug 2019, 9 Aug 2019, 11 Aug 2023); their in-force dates come from DoPT's footnotes. Fetch the Acts themselves to confirm, and to fill in their amending text, which the commits leave out for now.
 - **Chapter titles aren't stored anywhere yet** (the folder says "chapter-iii", the title "THE CENTRAL INFORMATION COMMISSION" is dropped), so the official-text check doesn't cover them.
 - **The splitter that turned DoPT's text into section files** is a one-off script (not in the repository). Its hard cases are an early look at M1's parser: "(i)" as a clause after (h) versus a roman sub-clause (decided by whether "(ii)" follows), lists nested inside clauses (s. 2(h)), four-letter labels like "(viii)", and wrapped lines that start with "(3) of section 12".
+
+## 2026-11-21: Publishing (T8)
+
+- Live: the reader at https://kurianjose7586.github.io/git-blame-the-constitution/, and the law repositories india-law/constitution (5 commits, 77 year tags) and india-law/rti-act (13 commits, 21 tags).
+- **The builds are deterministic across platforms.** The Pages workflow builds on Linux and prints each law's HEAD, and it matched the Windows build that was pushed: constitution 458b82c, rti-act 6cac3cd. So the force-push-free update path in decision 5 holds.
+- GitHub's own blame view of `part-iii/article-015.md` shows the amending act beside each clause, because the commit author is the act (decision 6). No reader needed for the basic demo.
