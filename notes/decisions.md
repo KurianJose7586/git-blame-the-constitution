@@ -76,3 +76,7 @@ What it says about M3:
 - **The list of 20 stands as drafted in PLAN.** None is missing from India Code; the Consumer Protection Act, 2019 has barely been amended (1 act) and could make way for a busier act if M3 needs one.
 
 **M1's three reconstruction acts (recommended, to confirm at the start of M1):** the Insolvency and Bankruptcy Code, 2016 (6 amending acts, 294 provisions), the POCSO Act, 2012 (4 amending acts) and the Arbitration and Conciliation Act, 1996 (3 amending acts, including the large 2015 rewrite). All their amendments date from 2013 on, so the engine and baseline get tested on clean digital text first, as PLAN's risk table advises; the colonial acts come in M3.
+
+## 2026-11-21: The primary text wins on words, not on punctuation
+
+Where an official consolidation disagrees with the instrument that made the change (the Gazette, the amending Act, the notification), the repository follows the instrument when the words differ: "(24 of 2019)", "thereunder", "of the Cabinet Secretariat", entry 27. Where only punctuation differs (a full stop inside or outside the closing quote), it keeps the consolidated form and notes the difference. Every deviation from the official fixture is listed in that fixture's footnotes.yaml.

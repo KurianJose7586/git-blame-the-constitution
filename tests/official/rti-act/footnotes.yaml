@@ -11,6 +11,12 @@
 #   chapter-iv/section-016.txt has "there under". Section 2 and 3 of the Right to Information (Amendment) Act,
 #   2019, which inserted that text, have neither, so the fixtures follow the Act.
 # - chapter-*/README.txt: the chapter headings ("CHAPTER III" and its title), from the same text.
+# - schedule-2.txt, two fixes from the notifications themselves (read on the e-Gazette):
+#   - entry 8 reads "Special [Frontier] Force." DoPT (and India Code) add "of the Cabinet Secretariat", but
+#     the 2005 Act printed "8. Special Prontier Force." and G.S.R. 319(E) of 2021 only replaced the word
+#     "Prontier"; no notification added those words.
+#   - entry 27 is added: G.S.R. 864(E) of 23 Nov 2023 inserted "27. Indian Computer Emergency Response Team.",
+#     which DoPT's copy "as on 18 Nov 2025" doesn't have.
 
 base: The Right to Information Act, 2005
 
@@ -139,4 +145,8 @@ footnotes:
   - file: schedule-2.md
     line: 26. Strategic Forces             # 10. Ins. by G.S.R. 673(E) dated 8-7-2016
     act: Notification No. G.S.R. 673(E), dated 8 July 2016
+    section: null
+  - file: schedule-2.md
+    line: 27. Indian Computer Emergency    # no DoPT footnote: G.S.R. 864(E) dated 23-11-2023, from the notification
+    act: Notification No. G.S.R. 864(E), dated 23 November 2023
     section: null

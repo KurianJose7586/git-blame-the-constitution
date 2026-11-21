@@ -597,11 +597,15 @@ amendments:
 
   - act: Notification No. G.S.R. 726(E), dated 8 October 2008
     instrument: notification
-    enacted: 2008-10-08          # dated 8 Oct 2008; an (E) notification, taken as published in the Extraordinary Gazette that day (copy not fetched: the host's certificate failed)
-    source: https://rti.dopt.gov.in/Writereaddata/RTI%20Act,%202005%20(Amended)-English%20Version.PDF
+    enacted: 2008-10-08          # dated and published 8 Oct 2008 (read on the e-Gazette); s. 24(2): effect on publication
+    gazette: Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 548, 8 October 2008
+    source: https://egazette.gov.in/
     sections:
       - section: null
         in_force: 2008-10-08
+        text: |
+          In the Second Schedule to the Right to Information Act, 2005, after serial number 21 and the entry relating thereto, the following serial number and the entry shall be added, namely:—
+          “22. National Security Council Secretariat”.
         files:
           schedule-2.md: |
             # THE SECOND SCHEDULE
@@ -635,11 +639,17 @@ amendments:
 
   - act: Notification No. G.S.R. 442(E), dated 9 June 2011
     instrument: notification
-    enacted: 2011-06-09          # dated 9 Jun 2011; an (E) notification, taken as published that day (copy not fetched)
-    source: https://rti.dopt.gov.in/Writereaddata/RTI%20Act,%202005%20(Amended)-English%20Version.PDF
+    enacted: 2011-06-09          # dated and published 9 Jun 2011 (read on the e-Gazette, uploaded there in Sep 2012)
+    gazette: Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 306, 9 June 2011
+    source: https://egazette.gov.in/
     sections:
       - section: null
         in_force: 2011-06-09
+        text: |
+          In the Second Schedule to the Right to Information Act, 2005, after serial number 22 and the entry relating thereto, the following serial numbers and entries shall be added, namely :—
+          “23. Central Bureau of Investigation.
+          24. National Investigation Agency.
+          25. National Intelligence Grid.”.
         files:
           schedule-2.md: |
             # THE SECOND SCHEDULE
@@ -676,11 +686,15 @@ amendments:
 
   - act: Notification No. G.S.R. 673(E), dated 8 July 2016
     instrument: notification
-    enacted: 2016-07-08          # dated 8 Jul 2016; an (E) notification, taken as published that day (copy not fetched)
-    source: https://rti.dopt.gov.in/Writereaddata/RTI%20Act,%202005%20(Amended)-English%20Version.PDF
+    enacted: 2016-07-08          # dated and published 8 Jul 2016 (read on the e-Gazette)
+    gazette: Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 468, 8 July 2016
+    source: https://egazette.gov.in/
     sections:
       - section: null
         in_force: 2016-07-08
+        text: |
+          In the Second Schedule to the Right to Information Act, 2005, after serial number 25 and the entry relating thereto, the following serial number and entry shall be inserted, namely:—
+          “26. Strategic Forces Command”.
         files:
           schedule-2.md: |
             # THE SECOND SCHEDULE
@@ -812,11 +826,18 @@ amendments:
 
   - act: Notification No. G.S.R. 319(E), dated 4 May 2021
     instrument: notification
-    enacted: 2021-05-04          # dated 4 May 2021; an (E) notification, taken as published that day (copy not fetched)
-    source: https://rti.dopt.gov.in/Writereaddata/RTI%20Act,%202005%20(Amended)-English%20Version.PDF
+    enacted: 2021-05-04          # dated and published 4 May 2021 (read on the e-Gazette)
+    gazette: Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), 4 May 2021 (e-Gazette CG-DL-E-04052021-226836)
+    source: https://egazette.gov.in/
     sections:
       - section: null
         in_force: 2021-05-04
+        text: |
+          In the Second Schedule to the Right to Information Act, 2005, -
+          (i) for serial number 2 and the entries relating thereto, the following shall be substituted, namely: -
+          “2. Research and Analysis Wing including its technical wing namely, the Aviation Research Centre of the Cabinet Secretariat.”;
+          (ii) serial number 7 and the entries relating thereto shall be omitted;
+          (iii) in serial number 8 for the word “Prontier”, the word “Frontier” shall be substituted.
         files:
           schedule-2.md: |
             # THE SECOND SCHEDULE
@@ -831,7 +852,7 @@ amendments:
             - 4. Central Economic Intelligence Bureau.
             - 5. Directorate of Enforcement.
             - 6. Narcotics Control Bureau.
-            - 8. Special Frontier Force of the Cabinet Secretariat.
+            - 8. Special Frontier Force.
             - 9. Border Security Force.
             - 10. Central Reserve Police Force.
             - 11. Indo-Tibetan Border Police.
@@ -880,3 +901,49 @@ amendments:
             - (2) Notwithstanding anything in the Official Secrets Act, 1923 (19 of 1923) nor any of the exemptions permissible in accordance with sub-section (1), a public authority may allow access to information, if public interest in disclosure outweighs the harm to the protected interests.
             - (3) Subject to the provisions of clauses (a), (c) and (i) of sub-section (1), any information relating to any occurrence, event or matter which has taken place, occurred or happened twenty years before the date on which any request is made under section 6 shall be provided to any person making a request under that section:
               - *Provided that* where any question arises as to the date from which the said period of twenty years has to be computed, the decision of the Central Government shall be final, subject to the usual appeals provided for in this Act.
+
+  - act: Notification No. G.S.R. 864(E), dated 23 November 2023
+    instrument: notification
+    enacted: 2023-11-23          # dated and published 23 Nov 2023 (e-Gazette upload 24 Nov). Missing from DoPT's copy of 18 Nov 2025 and from India Code
+    gazette: Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 681, 23 November 2023 (e-Gazette CG-DL-E-24112023-250242)
+    source: https://egazette.gov.in/
+    sections:
+      - section: null
+        in_force: 2023-11-23
+        text: |
+          In the Second Schedule to the Right to Information Act, 2005, after serial number 26 and the entry relating thereto, the following serial number and entry shall be inserted, namely: -
+          “27. Indian Computer Emergency Response Team.”
+        files:
+          schedule-2.md: |
+            # THE SECOND SCHEDULE
+
+            (See section 24)
+
+            INTELLIGENCE AND SECURITY ORGANISATION ESTABLISHED BY THE CENTRAL GOVERNMENT
+
+            - 1. Intelligence Bureau.
+            - 2. Research and Analysis Wing including its technical wing namely, the Aviation Research Centre of the Cabinet Secretariat.
+            - 3. Directorate of Revenue Intelligence.
+            - 4. Central Economic Intelligence Bureau.
+            - 5. Directorate of Enforcement.
+            - 6. Narcotics Control Bureau.
+            - 8. Special Frontier Force.
+            - 9. Border Security Force.
+            - 10. Central Reserve Police Force.
+            - 11. Indo-Tibetan Border Police.
+            - 12. Central Industrial Security Force.
+            - 13. National Security Guards.
+            - 14. Assam Rifles.
+            - 15. Sashtra Seema Bal.
+            - 16. Directorate General of Income-tax (Investigation).
+            - 17. National Technical Research Organisation.
+            - 18. Financial Intelligence Unit, India.
+            - 19. Special Protection Group.
+            - 20. Defence Research and Development Organisation.
+            - 21. Border Road Development Board.
+            - 22. National Security Council Secretariat.
+            - 23. Central Bureau of Investigation.
+            - 24. National Investigation Agency.
+            - 25. National Intelligence Grid.
+            - 26. Strategic Forces Command.
+            - 27. Indian Computer Emergency Response Team.

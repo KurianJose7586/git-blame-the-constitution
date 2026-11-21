@@ -32,8 +32,8 @@ About 20 minutes. Open each link, compare with the official source, and tick the
 - [ ] 15. [s. 27 on 24 Oct 2019](https://kurianjose7586.github.io/git-blame-the-constitution/#/rti-act/chapter-vi/section-027@2019-10-24) has the new clauses (ca) and (cb).
 - [ ] 16. [s. 8, 12 to 13 Nov 2025](https://kurianjose7586.github.io/git-blame-the-constitution/#/rti-act/chapter-ii/section-008@2025-11-12..2025-11-13) removes the old clause (j) and its proviso and adds the new one-line clause (j). The old text matches the 2005 Gazette and the new matches DoPT's s. 8.
 - [ ] 17. [Second Schedule on 1 Oct 2005, as in force](https://kurianjose7586.github.io/git-blame-the-constitution/#/rti-act/schedule-2@2005-10-01) has the original 18 entries ("15. Special Service Bureau", "8. Special Prontier Force"). [As published that day](https://kurianjose7586.github.io/git-blame-the-constitution/#/rti-act/schedule-2@2005-10-01?published) it has "15. Sashtra Seema Bal." and entries 19 to 22 (notification dated 28 Sep, published 8 Oct).
-- [ ] 18. [Second Schedule today](https://kurianjose7586.github.io/git-blame-the-constitution/#/rti-act/schedule-2) matches DoPT's: 25 entries, no entry 7. (Entry 27, CERT-In, added by G.S.R. 864(E) in 2023, is missing from DoPT's copy and from ours until we have the notification.)
-- [ ] 19. [Second Schedule blame](https://kurianjose7586.github.io/git-blame-the-constitution/#/rti-act/schedule-2?view=blame) gives each entry the notification DoPT's footnotes name (footnotes 1 to 10).
+- [ ] 18. [Second Schedule today](https://kurianjose7586.github.io/git-blame-the-constitution/#/rti-act/schedule-2) has 26 entries (no entry 7), ending with "27. Indian Computer Emergency Response Team." (G.S.R. 864(E) of 2023, which DoPT's copy lacks). Entry 8 reads "8. Special Frontier Force.": DoPT adds "of the Cabinet Secretariat", which no notification enacted.
+- [ ] 19. [Second Schedule blame](https://kurianjose7586.github.io/git-blame-the-constitution/#/rti-act/schedule-2?view=blame) gives each entry the notification DoPT's footnotes name (footnotes 1 to 10), and entry 27 G.S.R. 864(E) of 23 Nov 2023.
 
 ## The reader itself
 

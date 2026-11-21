@@ -9,7 +9,7 @@ Centre of the Cabinet Secretariat.]
 5. Directorate of Enforcement.
 6. Narcotics Control Bureau.
 7. ***.
-8. Special [Frontier] Force of the Cabinet Secretariat.
+8. Special [Frontier] Force.
 9. Border Security Force.
 10. Central Reserve Police Force.
 11. Indo-Tibetan Border Police.
@@ -29,3 +29,4 @@ Centre of the Cabinet Secretariat.]
 24. National Investigation Agency.
 25. National Intelligence Grid.]
 [26. Strategic Forces Command.]
+27. Indian Computer Emergency Response Team.
