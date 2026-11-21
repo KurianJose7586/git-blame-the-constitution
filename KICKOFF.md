@@ -177,8 +177,8 @@ These are rougher; refine them at the M0 gate. Folder names follow PLAN §6.
 
 | # | Task | Done when |
 |---|---|---|
-| T10 | Read the terms of use for India Code and the e-Gazette. This blocks T11 | Findings recorded in `decisions.md` |
-| T11 | `ingest/indiacode.py`: fetch act pages, footnotes and PDFs into `cache/`, with one request every few seconds and no refetching of cached pages | Three acts are cached, and a re-run makes no requests |
+| T10 | Read the terms of use for India Code and the e-Gazette. This blocks T11 | **Done 21 Nov.** India Code bans automated access and reproduction without written permission; its APIs are offered through API Setu. Requests drafted in `notes/permission-requests.md` |
+| T11 | `ingest/`: fetch the three acts' texts and amending acts into `cache/`, never refetching. **Revised after T10:** until API Setu access or written permission arrives, the sources are the e-Gazette and files you download by hand into `sources/`; India Code's API is used only through API Setu, with your keys from an environment variable | Three acts are cached, and a re-run makes no requests |
 | T12 | `ingest/pdf.py`: text from born-digital PDFs. Use OCR only for scans, and check it against a digital copy wherever one exists | Text extracted for the amending acts of the three acts |
 | T13 | `parse/`: act text to a tree with IDs written the way lawyers cite them (`s.14(1)(c)`), rendered to contract 2 | Round trip on 30 acts, with experiment E1's numbers in `results.md` |
 | T14 | `dsl/`: the edit-operation schema (decision 9) and an executor that applies it to the tree. Error messages must be good enough to send back to a model, such as "`s.13(1)`: 'five years' not found; nearest is 'five year'" | Every operation has tests, and seeded random edits on real trees never crash and never touch nodes outside their target |

@@ -43,7 +43,7 @@ Why things are the way they are, including the ones that were reversed. PLAN.md 
 
 ## 2026-11-21: Choosing the 20 acts (T9)
 
-Counted from India Code's own footnotes, through its API (one request every two seconds): for each candidate in PLAN M3, the provisions India Code holds, its footnotes, and the distinct amending acts named after "by" in them ("Subs. by Act 24 of 2019"). The counts are a floor, not a census: India Code's footnotes lag (they cite 2 amending acts for the RTI Act, where there are 3), and ordinances and adaptation orders aren't counted.
+**Obtained by scripted access to India Code's API before its terms of use were read (see "Terms of use (T10), and a mistake" below). Kept as aggregate counts only; the fetched data was deleted.** Counted from India Code's own footnotes, through its API (one request every two seconds): for each candidate in PLAN M3, the provisions India Code holds, its footnotes, and the distinct amending acts named after "by" in them ("Subs. by Act 24 of 2019"). The counts are a floor, not a census: India Code's footnotes lag (they cite 2 amending acts for the RTI Act, where there are 3), and ordinances and adaptation orders aren't counted.
 
 | Act | Provisions | Footnotes | Amending acts cited | First–last | Before 1950 | Since 2000 | Changes by notification |
 |---|---|---|---|---|---|---|---|
@@ -88,3 +88,20 @@ Where an official consolidation disagrees with the instrument that made the chan
 - **One `engine/` folder instead of PLAN §6's `parse/`, `dsl/` and `baseline/`.** They're a few hundred lines between them and change together; split them when one grows.
 - **A block is the amending text's own lines, not our Markdown.** `SUBSTITUTE_NODE` and friends carry the inserted provisions verbatim, one provision per line, and the executor works out depth and formatting. The model in M2 only has to copy text, never indent it.
 - **Targets are written the way lawyers cite them**, with the file's own short form: `art.15(4)`, `s.13(5)`, `s.8(1)(j)`, `sch.2(8)`, `preamble`; unlabelled provisions as `s.13(1)/proviso`, `s.13(2)/proviso2`, `art.15(6)/explanation`.
+
+## 2026-11-21: Terms of use (T10), and a mistake
+
+**What the sources say** (read on 21 Nov 2026):
+
+- **India Code** (indiacode.gov.in). Terms of Use, updated 22 Jun 2026: you may "access, download, and print materials ... for personal, non-commercial use only", keeping notices; users must "Not use any automated means to access the Portal for any purpose without our express written permission". Copyright Policy, same date: the Legislative Department claims all content (legislative texts, amendments, annotations, metadata, databases, APIs), and prohibits without prior written permission "copying, reproducing, republishing ... or distributing any content", derivative works, and using API data "for unauthorized purposes".
+- **Legislative Department** (legislative.gov.in), where the Constitution text came from: material "may be reproduced free of charge after taking proper permission by sending a mail to us", reproduced accurately, not misleadingly, with the source acknowledged.
+- **e-Gazette** (egazette.gov.in): only a liability disclaimer. Nothing restricts access or reproduction.
+- **DoPT** (dopt.gov.in), where the RTI Act text came from: its copyright page didn't load. The site runs on the same government template as the Legislative Department's, so the same permission-by-email rule is likely. Unverified.
+
+**The mistake.** India Code's API was queried by script before these terms were read: the RTI re-check, the T9 counts and three amending-act PDFs, about 200 requests on 21 Nov. KICKOFF put T10 first for exactly this reason. Automated access to India Code has stopped and won't resume without written permission.
+
+**What it changes:**
+
+- **T11 as planned (an automated India Code ingester) is blocked** until the Legislative Department grants written permission.
+- **Published content that came from India Code:** the amending text in the RTI repository's commits for the 2019 Act (ss. 2–4), the J&K Reorganisation Act (entry 95) and the DPDP Act (s. 44(3)), with their source links; and the T9 counts above. The same Acts are in the Gazette, so they can be re-sourced from the e-Gazette.
+- **The copyright question PLAN §8 parked is now pressing,** because M0 is public. Section 52(1)(q)(ii) of the Copyright Act, 1957 makes reproducing an Act non-infringing only "together with any commentary thereon or any other original matter". Whether commit trailers, notes and the reader count is a question for the law-faculty contact, not something to settle here.
