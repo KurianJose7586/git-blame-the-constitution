@@ -105,3 +105,17 @@ Where an official consolidation disagrees with the instrument that made the chan
 - **T11 as planned (an automated India Code ingester) is blocked** until the Legislative Department grants written permission.
 - **Published content that came from India Code:** the amending text in the RTI repository's commits for the 2019 Act (ss. 2–4), the J&K Reorganisation Act (entry 95) and the DPDP Act (s. 44(3)), with their source links; and the T9 counts above. The same Acts are in the Gazette, so they can be re-sourced from the e-Gazette.
 - **The copyright question PLAN §8 parked is now pressing,** because M0 is public. Section 52(1)(q)(ii) of the Copyright Act, 1957 makes reproducing an Act non-infringing only "together with any commentary thereon or any other original matter". Whether commit trailers, notes and the reader count is a question for the law-faculty contact, not something to settle here.
+
+## 2026-11-21: API Setu needs an organisation
+
+API Setu's consumer sign-up (Partners portal, "Organization set-up") requires an organisation type (industry and private sector, central or state government), a GSTN or similar ID, an organisation website and an email on the organisation's official domain. Its help assistant said individuals can register, but the form says otherwise. Registering the university ourselves without its authority would misrepresent who is asking, so the options are: the university (through the mentor or department) registers with a staff member or us as its contact, or API Setu waits until M3. M1 uses the e-Gazette and hand-downloaded PDFs either way.
+
+## 2026-11-21 (night): Parsing the consolidated Constitution (T13)
+
+- **Chapters are folders inside their Part:** `part-v/chapter-i/article-052.md`. A file's ID is still its name (`art.52`), and the reader already groups files by folder, titled from each README.
+- **Sub-headings ("Right to Equality") aren't in the law files.** Contract 2 has no place for them; report.json lists them. Revisit if the reader should show them.
+- **Omitted articles, Parts and clauses get no file or line.** report.json keeps them with their notes. In the history, an omitted article is a deleted file.
+- **Footnote markers and their brackets come out of the text,** and provenance.json maps each footnote to the lines it covers. Brackets that belong to the text stay: art. 368(4) "[whether before or after the commencement of section 55 ...]".
+- **Provisions inserted but not yet in force stay in the files, as printed,** and their footnotes are marked pending. The history will need an in-force date for them that doesn't exist yet.
+- **The parser is `engine/constitution.py`,** following the one-folder decision above, and it's Constitution-specific; a general act parser comes with T18. The footnote parser is `ingest/footnotes.py`, where KICKOFF puts it.
+- **Nothing parsed from the Constitution PDF is published** until the Legislative Department's permission or the legal opinion arrives (T10).

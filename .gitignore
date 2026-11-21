@@ -5,3 +5,4 @@ __pycache__/
 reader/data/
 cache/
 sources/
+*.local.md

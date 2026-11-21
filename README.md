@@ -52,6 +52,13 @@ M1 has started: the edit operations and executor (`engine/ops.py`), a first rege
 uv run engine/replay.py history/constitution.yaml history/rti-act.yaml
 ```
 
+The whole current Constitution (Preamble and Parts I–XXII, 471 articles) now parses from the Legislative Department's PDF into law files, with each of its 499 footnotes linked to the lines it covers and the amendment that made them. Every article's words match the source, and the Preamble and Article 15 come out identical to M0's hand-built files. The output stays local until the permission requested under T10 arrives:
+
+```
+uv run ingest/pdf.py sources/coi-2026-09-10.pdf out/coi.txt
+uv run engine/constitution.py out/coi.txt out/constitution-current
+```
+
 Tests: `uv run pytest` and `node --test reader/app.test.mjs`.
 
 ## First week
