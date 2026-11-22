@@ -103,3 +103,13 @@ Things noticed along the way: bugs, contradictions, surprises, dead ends. Append
 - **Typesetting in the Fourth Schedule's table:** "14[1[2[** * * *… *]" opens three brackets and closes one; renumbered rows read "4[3.] Assam"; and the Sixth Schedule has "18.* * * * *" with no space and a note glued to a paragraph number ("21. Autonomous districts" is note 2 on paragraph 1, as "731D." was on art. 31D).
 - **The same footnote parser read DoPT's RTI notes** with one exception, "Omitted by G.S.R. 235(E)", which names a notification, not an Act.
 - **M0's own RTI files have two formatting slips,** found by the parser, not by a person: s. 17(1) and s. 20(1) aren't list items. Fixed on 22 Nov by rebuilding india-law/rti-act (see decisions).
+
+## 2026-11-22 (evening): The Gazette's layout (the IBC)
+
+- **The Gazette prints headings and Act numbers in the margin,** left or right of the body (x about 58 or 489 points; the body runs from 117 to about 470). A heading's first line sits level with its section's first line, to within about 3 points, and wraps every 9.6 points. Plain text extraction puts them on lines of their own, between body lines.
+- **Act numbers queue up.** Where one line names several Acts ("the Indian Contract Act, 1872, the Indian Partnership Act, 1932, the Securities Contracts (Regulation) Act, 1956 ..."), their numbers stack in the margin one per line below it, so a number can be four lines below its Act. Matching by year first, then the nearest name above, places them; the year can differ ("6 of 2009" is the Limited Liability Partnership Act, 2008).
+- **A citation in the other margin can sit between the lines of a heading** (p. 34), and a citation can wrap ("XXXVIII of" / "1949."). Each margin has to be read on its own.
+- **Signatures look like law.** "Secretary to the Government of India" ends the Act, but also appears inside it, in s. 189's selection committee. Only a line that is nothing else is the signature.
+- **The text layer has typesetting in it:** "sub-section ( 5)" 264 times; 10 words with no space between them ("thecosts"); dashes that map to U+FFFD on later pages; "41.Determination" with no space after the number; and a margin note "9 to 1932." for "9 of 1932".
+- **Three layouts in one Act's history:** the Gazette (2016 to 2021), the Bill as passed with line numbers and a "BILL" watermark (the 2026 Act), and a scan (the 2019 Act). IBBI's consolidated copies are a fourth: headings on a line of their own, and footnotes like "1 Subs. by Act No. 26 of 2018, sec. 2 for the word ‘repaid’ (w.e.f. 6-6-2018)", often quoting the old text ("Clause (e), before substitution, stood as under: ...").
+- **IBBI's consolidations have slips too:** "(XXXVIII of 1939)" for the Chartered Accountants Act, 1949.

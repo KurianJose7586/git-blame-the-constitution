@@ -236,7 +236,8 @@ def segment(stream, act=False):
                 starts[i] = "article"
         elif m := PART.match(text):
             j = i + 1
-            while j < len(stream) and (not texts[j] or caps(texts[j])) and not CHAPTER.match(texts[j]):
+            while (j < len(stream) and (not texts[j] or caps(texts[j])) and not CHAPTER.match(texts[j])
+                   and not (act and ACT_CHAPTER.match(texts[j]))):
                 j += 1
             units.append(["part", m[1], line, [s for _, s in stream[i + 1:j] if flat(s)], []])
             starts[i] = "part"

@@ -113,3 +113,43 @@ The Schedules' tables (First, Fourth, and the Sixth's table of tribal areas) com
 The 7 that differ: 5 where M0 follows the Gazette over DoPT on purpose ("expedient", "suo motu", "(24 of 2019)", "thereunder", Second Schedule entries 8 and 27; see tests/official/rti-act/footnotes.yaml), and **2 slips in M0's published files** that the parser gets right: in s. 17 and s. 20, sub-section (1) isn't a list item (s. 20's reads "(1)Where", as DoPT printed it).
 
 **Fixed later on 22 Nov:** the 2 slips are corrected in `history/rti-act.yaml` and india-law/rti-act is rebuilt. The parser now differs from M0 only in the 5 deliberate places.
+
+## 2026-11-22 (evening): T18 started on the Insolvency and Bankruptcy Code
+
+**Sources:** 16 PDFs from IBBI's own list (ibbi.gov.in, Legal Framework, Act), downloaded with your approval and listed in `sources/ibc/SOURCES.txt` (not committed): the Code as gazetted, its seven amending Acts (2017 to 2026) and a corrigendum, the J&K Adaptation Order, 2020, and IBBI's consolidated Code after six of the amendments.
+
+### 1. The Code as gazetted, into law files (T12, T13)
+
+**How:** `uv run ingest/pdf.py --gazette sources/ibc/2016-05-28-ibc-2016.pdf out/ibc/g-2016.txt`, then `uv run engine/constitution.py --act out/ibc/g-2016.txt out/ibc/code-2016`. The Gazette prints each section's heading and each cited Act's number in the margin; the extractor runs them in where a consolidated text has them ("2. Application.—", "Companies Act, 2013 (18 of 2013)").
+
+| | Count |
+|---|---|
+| Sections / Schedules | 255 of 255 / 11, in 5 Parts and their Chapters |
+| Margin headings placed | 267 (sections, and sections quoted in the Schedules) |
+| Margin citations placed | 48 of 49 (the one: "Indian Penal" / "Code." wraps across lines) |
+| **E1, words** / round trip | **266 / 266**, 1916 / 1916 |
+| **Independent check:** words of the parse found, in order, in IBBI's consolidated text of 17 Aug 2018 | **53,996 of 54,257 (99.5%)** |
+
+The 0.5% is mostly the 2017 and 2018 amendments themselves ("repaid" became "paid", new clauses), which is what the replay has to produce. Also in it: 10 words the Gazette PDF's text layer runs together ("thecosts", "threemonths"; pypdf's own text has them too), and spelling differences between the Gazette and IBBI ("maximisation"/"maximization", and IBBI's "(XXXVIII of 1939)" for the Chartered Accountants Act, 1949).
+
+### 2. Experiment E2, held out: the regex baseline on the IBC's amending Acts (T16)
+
+**How:** each amending Act extracted with `--gazette`, split into its sections, each section's wrapped lines rejoined into instructions and quoted blocks, then `engine/baseline.py`. The baseline's rules were written on M0's 16 provisions, before these were seen. Repeal-and-savings sections and amendments of other Acts are left out.
+
+| Amending Act | Provisions |
+|---|---|
+| IBC (Amendment) Act, 2017 (Act 8 of 2018) | 8 |
+| IBC (Second Amendment) Act, 2018 | 38 |
+| IBC (Amendment) Act, 2020 | 12 |
+| IBC (Second Amendment) Act, 2020 | 2 |
+| IBC (Amendment) Act, 2021 | 15 |
+| **Total** | **75** |
+| **Fully understood (operations, nothing missed)** | **38 (51%)** |
+| Partly understood | 10 |
+| Not understood | 27 |
+
+What the 37 misses need: inserting a whole new section, Chapter or Schedule (12; the executor can't add a file yet); a proviso or Explanation as a node, as in "for the proviso", "before the Explanation", "the Explanation shall be numbered as Explanation I" (10); "the words and figures", "the words, figures, brackets and letter" (7); a clause's block quoted on the instruction's own line (3); "at both the places where they occur" (1); the rest, instructions the rejoining split.
+
+Not counted: the IBC (Amendment) Act, 2019 is a scan with no text layer (OCR isn't built), and the 2026 Act is printed as the Bill as passed, with line numbers that displace its section numbers (". (1)", "Code1"); it needs its own layout handling.
+
+**Caveat:** "understood" means the baseline produced operations and missed no instruction, not that they're right. Whether they're right is the replay against IBBI's consolidated copies, which hasn't run yet. The split into provisions and the rejoining of lines are a script in progress, not committed.

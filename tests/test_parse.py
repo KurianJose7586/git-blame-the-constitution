@@ -193,3 +193,40 @@ def test_act_mode_on_the_rti_act():
         "preamble.md", "chapter-ii/section-004.md", "chapter-iii/section-013.md", "chapter-iv/section-016.md",
         "schedule-2.md",  # M0 follows the Gazette: "expedient", "suo motu", no "(24 of 2019)", "thereunder", entries 8, 27
     }
+
+
+IBC = ROOT / "sources" / "ibc" / "2016-05-28-ibc-2016.pdf"
+
+
+def test_gazette_margin_notes():
+    """T12 on the Gazette's own layout: a section's heading and an Act's number are printed in the margin; the
+    extractor runs them in where a consolidated text has them, including numbers queued below a line naming
+    several Acts."""
+    if not IBC.exists():
+        pytest.skip(f"{IBC.name} is not in sources/ibc/ (it isn't committed)")
+    from pypdf import PdfReader
+    from pdf import gazette
+    reader = PdfReader(IBC)
+    first, lost = gazette(reader.pages[0])
+    assert "1. Short title, extent and commencement.—(1) This Code may be called" in first and not lost
+    second = gazette(reader.pages[1])[0]
+    assert "2. Application.—The provisions of this Code shall apply to—" in second
+    assert "Companies Act, 2013 (18 of 2013) or under any" in second and "Partnership Act, 2008 (6 of 2009);" in second
+    fifth, lost = gazette(reader.pages[4])
+    assert ("Indian Contract Act, 1872 (9 of 1872), the Indian Partnership Act, 1932 (9 of 1932)" in fifth
+            and "Act, 1949 (XXXVIII of 1949);" in fifth and not lost)
+
+
+def test_whole_ibc_as_gazetted():
+    """The Insolvency and Bankruptcy Code, 2016 as gazetted: every section and Schedule, each file's words equal
+    to its source's, and one margin note left unplaced ("Indian Penal" / "Code." wraps)."""
+    if not IBC.exists():
+        pytest.skip(f"{IBC.name} is not in sources/ibc/ (it isn't committed)")
+    from pypdf import PdfReader
+    from pdf import gazette
+    texts, lost = zip(*(gazette(page) for page in PdfReader(IBC).pages))
+    assert sum(lost, []) == ["45 of 1860."]
+    files, _, report, _ = constitution.parse(list(texts), act=True)
+    assert report["articles"] == 255 and report["schedules"] == 11 and not report.get("article_numbers_missing")
+    assert report["e1"]["words_match"] == report["e1"]["files"] == 266
+    assert "part-ii/chapter-i/README.md" in files and files["part-ii/README.md"].strip().endswith("CORPORATE PERSONS")
