@@ -75,16 +75,46 @@ def find(files, target):
         return path, None, None, -1
     if rest == "/heading":  # "in the marginal heading": the file's first line
         return path, 0, 1, -1
-    hits = [n for n in nodes(files[path]) if n[0] == rest]
+    every = nodes(files[path])
+    hits = [n for n in every if n[0] == rest]
     if not hits and (tail := re.search(r"(/(?:explanation|proviso)\d*)+$", rest)):
-        # "the Explanation" of s.18 is printed after its last clause, where it nests (contract 2): if it is the
-        # only one of its kind anywhere inside the provision named, it is the one meant
-        inside = [n for n in nodes(files[path]) if n[0].startswith(rest[:tail.start()]) and n[0].endswith(tail[0])]
-        hits = inside if len(inside) == 1 else []
+        hits = unlabelled(every, rest[:tail.start()], re.findall(r"/[a-z]+\d*", tail[0]))
+    if not hits and "/" not in rest:  # "clause (c)" of s.224, whose only clause (c) is in sub-section (2)
+        inside = [n for n in every if n[0].endswith(rest)]
+        hits = inside if len(inside) == 1 else []  # s.208 has (1)(c) and (2)(c): still not found
     if not hits:
         near = difflib.get_close_matches(rest, [n[0] for n in nodes(files[path])], n=3, cutoff=0.4)
         raise EditError(f"{target}: not found in {path}" + (f"; nearest: {', '.join(m[1] + n for n in near)}" if near else ""))
     return (path, *hits[0][1:])
+
+
+def unlabelled(every, prefix, steps):
+    """Provisos and Explanations that contract 2 nests differently from the drafting, found only when one fits.
+
+    - "the Explanation" of s.18, printed after its last clause, nests under that clause: the only node of its kind
+      anywhere inside the provision named is the one meant.
+    - "in the second proviso, in Explanation I" (s.29A(c)): an Explanation printed after a proviso is its sibling
+      here, so the last step alone is tried.
+    - "in Explanation I ..., the proviso" (s.29A(j)): nothing nests under an Explanation, so its proviso is the
+      first one after it, before the text leaves the Explanation's depth.
+    """
+    inside = [n for n in every if n[0].startswith(prefix)]
+    for tail in ("".join(steps), steps[-1]):
+        found = [n for n in inside if n[0].endswith(tail)]
+        if len(found) == 1:
+            return found
+    if len(steps) == 2 and steps[0].startswith("/explanation") and steps[1].startswith("/proviso"):
+        owner = [n for n in inside if n[0].endswith(steps[0])]
+        if len(owner) == 1:
+            after = []
+            for n in every[every.index(owner[0]) + 1:]:
+                if n[3] < owner[0][3]:
+                    break
+                if re.search(r"/proviso\d*$", n[0]):
+                    after.append(n)
+            k = int(steps[1][len("/proviso"):] or 1)
+            return after[k - 1:k]
+    return []
 
 
 def nearest(needle, hay):
@@ -154,7 +184,7 @@ def render(block, depth, schedule):
 def section_file(block, beside):
     """(path, text) of a section an amendment inserts or substitutes, laid out as the parser lays out a section."""
     from constitution import HEAD_END, article, flat  # here, not at the top: constitution imports this module
-    m = re.match(r"(\d+)([A-Z]*)\.\s", block)
+    m = re.match(r"(\d+)-?([A-Z]*)\.\s?", block)  # "29A. ", "54-I. "
     if not m or not HEAD_END.search(block):
         raise EditError(f"a new section needs a number and a heading, \"29A. Heading.—\": {block[:60]!r}")
     head, lines, _ = article(block.split("\n"))
@@ -165,13 +195,13 @@ def section_file(block, beside):
 def chapter_files(block, beside):
     """{path: text} of a Chapter an amendment inserts: its README and its sections, in a folder beside the folder of
     the section it follows ("CHAPTER III-A" after s.54 in part-ii/chapter-iii: part-ii/chapter-iii-a)."""
-    m = re.match(r"CHAPTER\s+([IVXL]+(?:-?[A-Z])?)\s+(.*?)\s*\n?(?=\d+[A-Z]*\.\s)", block, re.S)
+    m = re.match(r"CHAPTER\s+([IVXL]+(?:-?[A-Z])?)\s+(.*?)\s*\n?(?=\d+(?:-?[A-Z]+)?\.\s?)", block, re.S)
     if not m:
         raise EditError(f"a new Chapter needs its number, title and sections: {block[:60]!r}")
     number = re.sub(r"-?([a-z])$", r"-\1", m[1].lower())  # "III-A" and "IIIA" are both chapter-iii-a
     folder = f"{PurePosixPath(beside).parent.parent}/chapter-{number}".lstrip("./")
     out = {f"{folder}/README.md": f"# CHAPTER {m[1]}\n\n{' '.join(m[2].split())}\n"}
-    for section in re.split(r"\n(?=\d+[A-Z]*\.\s)", block[m.end():]):
+    for section in re.split(r"\n(?=\d+(?:-?[A-Z]+)?\.\s?)", block[m.end():]):
         path, text = section_file(section, f"{folder}/README.md")
         out[path] = text
     return out
@@ -187,7 +217,7 @@ def apply(files, ops):
 
 def apply_one(files, op):
     name = op.get("op")
-    if name not in OPS or set(op) - ({"every"} if name.endswith("_WORDS") else set()) != {"op", *OPS[name]}:
+    if name not in OPS or set(op) - ({"every", "last"} if name.endswith("_WORDS") else set()) != {"op", *OPS[name]}:
         raise EditError(f"{op}: expected {name} with fields {OPS.get(name)}")
     target = op["target"]
     path, first, end, depth = find(files, target)
@@ -206,26 +236,34 @@ def apply_one(files, op):
     if first is None:  # a whole file: everything after the heading
         first = 1 if lines[0].startswith("# ") else 0
         end = len(lines) - (lines[-1] == "")
+    elif name in ("SUBSTITUTE_NODE", "OMIT_NODE") and re.search(r"/(?:proviso|explanation)\d*$", target):
+        # a proviso's or an Explanation's own list ("(A) a scheduled bank; or") is printed after it at its depth
+        # (contract 2 nests nothing under them): it goes with it
+        while end < len(lines) and (item := ITEM.match(lines[end])) and len(item[1]) // 2 == depth \
+                and LABEL.match(item[2]):
+            end += 1
     region = "\n".join(lines[first:end])
     schedule = path.startswith("schedule")
 
     if name in ("SUBSTITUTE_WORDS", "OMIT_WORDS", "INSERT_WORDS"):
         needle = op["old"] if name == "SUBSTITUTE_WORDS" else op["anchor"] if name == "INSERT_WORDS" else op["text"]
         words = re.compile(rf"(?<!\w){re.escape(needle)}(?!\w)")  # whole words: "payment" isn't in "repayment"
-        hits = len(words.findall(region))
+        hits = list(words.finditer(region))
         if not hits:
             raise EditError(f"{name} {target}: {needle!r} not found{nearest(needle, region)}")
-        if hits > 1 and not op.get("every"):
-            raise EditError(f"{name} {target}: {needle!r} occurs {hits} times; name the provision it is in, or say every")
-        if name == "SUBSTITUTE_WORDS":
-            region = words.sub(lambda _: op["new"], region)
-        elif name == "INSERT_WORDS":
-            if op["position"] not in ("after", "before"):
-                raise EditError(f"{name} {target}: position must be 'after' or 'before'")
-            region = words.sub(lambda _: f"{needle} {op['text']}" if op["position"] == "after" else f"{op['text']} {needle}", region)
-        else:  # the space before the words goes with them
-            region = re.sub(rf"(?:\s|(?<!\w)){re.escape(needle)}(?!\w)", "", region)
+        if len(hits) > 1 and not op.get("every") and not op.get("last"):
+            raise EditError(f"{name} {target}: {needle!r} occurs {len(hits)} times; name the provision it is in, "
+                            "or say every, or last")
+        if name == "INSERT_WORDS" and op["position"] not in ("after", "before"):
+            raise EditError(f"{name} {target}: position must be 'after' or 'before'")
+        new_words = (op["new"] if name == "SUBSTITUTE_WORDS" else "" if name == "OMIT_WORDS"
+                     else f"{needle} {op['text']}" if op["position"] == "after" else f"{op['text']} {needle}")
+        for hit in reversed(hits[-1:] if op.get("last") else hits):  # "occurring at the end": the last one only
+            start = hit.start() - (name == "OMIT_WORDS" and hit.start() > 0 and region[hit.start() - 1].isspace())
+            region = region[:start] + new_words + region[hit.end():]  # an omission takes the space before it
         new = region.split("\n")
+    elif name == "SUBSTITUTE_NODE" and target.endswith("/heading"):  # a new marginal heading, same number
+        new = [re.match(r"# \S+", lines[0])[0] + " " + " ".join(op["block"].split())]
     elif name == "OMIT_NODE":
         new = []
     elif name == "RENUMBER":

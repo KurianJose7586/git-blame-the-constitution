@@ -164,3 +164,50 @@ def test_words_that_occur_twice_need_every():
     assert run({"op": "SUBSTITUTE_WORDS", "target": "art.15", "old": "wells", "new": "tanks", "every": True}).count("tanks") == 2
     with pytest.raises(EditError, match="not found"):  # whole words only: "hops" isn't in "shops"
         run({"op": "SUBSTITUTE_WORDS", "target": "art.15(2)(a)", "old": "hops", "new": "x"})
+
+
+def test_baseline_reads_the_2026_drafting():
+    """Drafting first met in the IBC (Amendment) Act, 2026, after its held-out count (notes/results.md)."""
+    from baseline import baseline
+    ops, misses = baseline(
+        'In section 5 of the principal Act,—\n'
+        '(a) clause (2A) shall be re-numbered as clause (2B) thereof and before clause (2B) as so re-numbered, the '
+        'following clause shall be inserted, namely:—\n‘(2A) "avoidance transaction" means a transaction;’;\n'
+        '(b) in clause (15), after the words "process period" occurring at the end, the words "and such other debt" '
+        'shall be inserted;\n'
+        '(c) clauses (ze), (zf) and (zg) shall be omitted.')
+    assert not misses
+    assert [(o["op"], o["target"], o.get("label") or o.get("last") or o.get("position")) for o in ops] == [
+        ("RENUMBER", "s.5(2A)", "2B"), ("INSERT_NODE", "s.5(2B)", "before"), ("INSERT_WORDS", "s.5(15)", True),
+        ("OMIT_NODE", "s.5(ze)", None), ("OMIT_NODE", "s.5(zf)", None), ("OMIT_NODE", "s.5(zg)", None)]
+    assert [o["target"] for o in baseline("Sections 38, 39 and 42 of the principal Act shall be omitted.")[0]] == [
+        "s.38", "s.39", "s.42"]
+    ops, _ = baseline('In section 217 of the principal Act,—\n(a) for the marginal heading, the marginal heading '
+                      '“Complaints against service providers.” shall be substituted;')
+    assert ops == [{"op": "SUBSTITUTE_NODE", "target": "s.217/heading", "block": "Complaints against service providers."}]
+
+
+def test_last_occurrence_and_heading():
+    got = run({"op": "INSERT_WORDS", "target": "art.15", "position": "after", "anchor": "wells", "text": "and tanks",
+               "last": True})
+    assert "the use of wells." in got and "applies to wells and tanks." in got
+    assert run({"op": "SUBSTITUTE_NODE", "target": "art.15/heading", "block": "New heading."}).startswith("# 15. New heading.\n")
+
+
+def test_provisos_inside_explanations():
+    """s.29A(j): contract 2 nests nothing under an Explanation, so "in Explanation I, for the proviso" finds the
+    first proviso after it, and the proviso's own list (A), (B) goes with it."""
+    text = ("# 29A. Persons not eligible.\n\nA person shall not be eligible—\n"
+            "- (j) has a connected person.\n"
+            "  - *Explanation*.—For the purposes of this clause, \"connected person\" means—\n"
+            "  - (i) any promoter; or\n"
+            "  - (ii) any holding company:\n"
+            "    - *Provided that* nothing in clause (ii) shall apply to—\n"
+            "    - (A) a scheduled bank; or\n"
+            "    - (B) an asset reconstruction company.\n")
+    got = apply({"part-ii/chapter-ii/section-029a.md": text}, [
+        {"op": "INSERT_WORDS", "target": "s.29A(j)/explanation", "position": "after", "anchor": "Explanation", "text": "I"},
+        {"op": "SUBSTITUTE_NODE", "target": "s.29A(j)/explanation/proviso", "block": "Provided that nothing applies."},
+    ])["part-ii/chapter-ii/section-029a.md"]
+    assert "*Explanation I*.—" in got and "    - *Provided that* nothing applies." in got
+    assert "scheduled bank" not in got and "asset reconstruction" not in got

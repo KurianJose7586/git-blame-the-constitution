@@ -61,7 +61,7 @@ YEAR = re.compile(r"(?:Act|Code|Procedure|Ordinance|Regulations?|Order)(?:,\s*|\
                   r"|Penal Code\b"  # cited without its year
                   r"|^\d{4}\b")  # a name that wraps before its year: "Ordinance," / "2017"
 SIGNED = re.compile(r"Secretary to the Gov(?:t\.|ernment)\s+of\s+India\.?")  # the whole line: the signature
-SECTION = re.compile(r"[“\"‘']?\d+[A-Z]*\.\s*")
+SECTION = re.compile(r"[“\"‘']?\d+(?:-?[A-Z]+)?\.\s*")  # "2. ", "29A. ", "54-I. " (the hyphen keeps I from 1)
 
 
 def gazette(page):
@@ -88,8 +88,12 @@ def gazette(page):
             if not rows or abs(rows[-1][0] - y) >= 3:
                 rows.append([y, []])
             rows[-1][1].append((x, chunk))
-        return [[y, re.sub(r"\(\s+(?=\w)|(?<=\w)\s+\)", lambda m: m[0].strip(),  # the text layer's "( 5)"
-                           " ".join("".join(c for _, c in sorted(cs)).split()))] for y, cs in rows]
+        return [[y, tidy(" ".join("".join(c for _, c in sorted(cs, key=lambda c: c[0])).split()))]  # ties: as drawn
+                for y, cs in rows]
+
+    def tidy(text):  # typesetting in the text layer: "( 5)", a Bill's "––" for "—", "re- numbered"
+        text = re.sub(r"\(\s+(?=\w)|(?<=\w)\s+\)", lambda m: m[0].strip(), text)
+        return re.sub(r"(?<=\w)(?:- | -)(?=[A-Za-z])", "-", text.replace("––", "—"))
 
     inside = [MARGIN[0] <= x < MARGIN[1] for x, _, _ in runs]
     body = lines([r for r, i in zip(runs, inside) if i])
@@ -199,6 +203,13 @@ def unglue(texts):
                 if pairs[f"{word[:i]} {word[i:]}".lower()] >= 2:
                     return f"{word[:i]} {word[i:]}"
         return word
+    words = Counter(w.lower() for w in found)
+
+    def join(m):  # the opposite: "th e following", "substitut ed", where the first part is no word of its own
+        a, b = m[1], m[2]
+        return a if words[a.lower()] == 1 and words[(a + b).lower()] >= 3 else m[0]  # drop the space only
+    texts = [re.sub(r"\b(\d+)(or|and)\b", r"\1 \2", text) for text in texts]  # "section 7or section 9"
+    texts = [re.sub(r"\b([A-Za-z]{2,}) (?=([a-z]{1,9})\b)", join, text) for text in texts]  # each pair, overlapping
     return [re.sub(r"[A-Za-z]{4,}(?![-A-Za-z])", split, text) for text in texts]  # not "recommenda-"
 
 

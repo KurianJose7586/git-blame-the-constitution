@@ -121,3 +121,11 @@ Things noticed along the way: bugs, contradictions, surprises, dead ends. Append
 - **The scanned 2019 Act** OCRs well enough to read but not to replay: "(J)" for "(1)", "(6)" for "(b)", "(@" for "(i)", "namiely", and margin notes that land on the wrong line. Its quoted text would need checking against a digital copy, which doesn't exist for this Act.
 - **A Chapter inserted by amendment says where it goes only through its sections' numbers:** "After Chapter III of the principal Act" is ambiguous in the IBC (Parts II and III both have a Chapter III); "54A" puts it after s. 54, in Part II.
 - **Blocks quoted in single quotes hold terms in double quotes** ('(2A) "base resolution plan" means'); a block can only be closed by the kind of quote that opened it.
+
+## 2026-11-23 (night): The 2026 Act's Bill layout, and drafting that skips levels
+
+- **A Bill as passed draws a label and its text at the same x.** "1" and ". (1)" start at the same point, so sorting a line's pieces by x and then by text put ". (" first. Pieces at the same x keep the order they're drawn in.
+- **The Bill's text layer breaks words with spaces** ("insolven cy", "satisfi ed", "inf ormation") and writes "––" for "—" and "re- numbered". A broken word is joined back when its first part is no word anywhere else in the Act and the whole word occurs at least three times; "t he" and "pro ceeding" stay broken.
+- **Drafting skips levels the tree has.** "Clause (c)" of s. 224 is in sub-section (2), and the amendment doesn't say so; it is found because it is the only clause (c) in the section. In s. 208, which has two, it isn't.
+- **"Explanation I" is numbered by amendment:** "the Explanation occurring after clause (j) shall be numbered as Explanation I, and in Explanation I as so numbered, for the proviso ...". The proviso in it, and the proviso's own list (A) to (C), follow the Explanation in the file without nesting under it.
+- **The Department of Legal Affairs' site refused the browser with Akamai's "Access Denied"** while looking for the Arbitration Act's amendments. Not worked around.

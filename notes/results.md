@@ -182,3 +182,33 @@ A file "differs only where the Act as gazetted already did" when every differenc
 **From 2019 on, not every difference is checked yet.** The 23 files with new differences in 2021, by first reading: about half are IBBI's (spelling, typesetting such as "t he rem unera tion", Act numbers it omits, "7or" run together in the Gazette's text layer); the rest are the replay's: the OCR'd 2019 Act (two provisions not understood, s. 12 targeted at "(J)" for "(1)", its s. 5 run into s. 4, a clause read as "(6)" for "(b)"), s. 29A's Explanations again, "occurring at the end" (2020 Act, s. 5(15)), the margin headings of two new sections (54H, 54N), s. 208's sub-section, and s. 54A's sub-clause numbering and s. 66, still to look at.
 
 **What it took (held out, so this is the honest cost of the IBC):** the baseline needed whole sections and Chapters, provisos and Explanations as nodes, "the words, figures and letter", "at both the places" (now an `every` flag; without it, words that occur twice are an error rather than a guess), the marginal heading, "for sub-sections (7) and (8)", and context that follows the instruction list's own labels. The executor matches whole words only (before, "payment" would have matched inside "repayment"). M0's replay is unchanged: 12 exact, 13 after quotes, 15 same words.
+
+## 2026-11-23 (night): T18 on the IBC, every difference to 2021 explained
+
+**How:** as on 22 Nov, with the 2019 Act transcribed from its scan (below) and the 2026 Act read from its Bill layout and applied after the last checkpoint.
+
+| Checkpoint (IBBI) | Files matching word for word | Before any amendment | Amended files | … matching | … differing only where the 2016 text did | … with new differences |
+|---|---|---|---|---|---|---|
+| 17 Aug 2018 | 201 of 299 | 181 | 44 | 20 | 15 | 9 |
+| 6 Aug 2019 | 201 of 299 | 181 | 44 | 20 | 13 | 11 |
+| 13 Mar 2020 | 200 of 300 | 179 | 48 | 21 | 12 | 15 |
+| 18 Mar 2020 | 199 of 300 | 178 | 48 | 21 | 12 | 15 |
+| 23 Sep 2020 | 200 of 301 | 178 | 50 | 22 | 12 | 16 |
+| **12 Aug 2021** | **259 of 321** | 210 | **77** | **49** | **8** | **20** |
+
+| Amending provisions | Applied in full | Partly | Failed |
+|---|---|---|---|
+| 2017 to 2021 Acts (83) | **80** | 2 | 1 |
+| 2026 Act (71; no consolidation after it to check against) | 56 | 9 | 6 |
+
+**Every difference at the 2021 checkpoint is explained.** Of the 20 files with new differences, 17 differ only where IBBI departs from the amending Act's own words, each checked against the Gazette text or, for 2019, the scan: "initiating" (IBBI "initiation"), "license", "clearances", "arrangements" (2020 Act; IBBI "licence", "clearance", "arrangement"), "having been fulfilled" (IBBI drops "been"), "incharge" (Gazette's text layer; IBBI "in charge"), "under Explanation I" (IBBI adds "the"), "any other law" (2018 Act; IBBI drops "other"), "For the removal of doubts" and "For the purposes" (2019 Act; IBBI drops "the", writes "purpose"), "section 7 or section 9" (2021 Act; IBBI drops "or"), "(ii)", "(iii)" in s. 54A (IBBI renumbers them), "secton" (the 2018 Act's typo, which IBBI corrects), "subsection", "register", "shall be form part", "t he rem unera tion", "fo rce", "1939", and the Act numbers IBBI leaves out ("(12 of 2003)", "(36 of 1963)", "(6 of 2009)", "(18 of 2013)", "(27 of 2006)").
+
+The replay's own differences, all explained:
+- **s. 2:** the unlabelled text after its last clause ("in relation to their insolvency ...") is joined to clause (e) by the parser, so substituting (e) drops it. The Gazette's x positions show it is flush left; the parser doesn't use them.
+- **s. 66:** "after sub-section (2)" puts the new (3) after the section's closing Explanation, which contract 2 nests under (2); IBBI puts it before. Changing where a closing Explanation nests would change M0's published Article 15.
+- **s. 208:** the 2021 Act inserts "after clause (c)" of s. 208, which has a clause (c) in both sub-sections; the executor won't choose.
+- **s. 22(3)(a), s. 28(3)** (2018): "after the words 'resolution professional'" matches three places; the Gazette's text layer has "seventy five" where the amendment quotes "seventy-five". These two don't show as new differences, because the 2016 text already lacked the change.
+
+**The 2019 Act, transcribed.** It is a scan. Tesseract reads it but misreads labels ("(6)" for "(b)", "(J)" for "(1)", "(@" for "(i)") and puts margin notes on the wrong lines, because the scan is skewed and the margins overlap the body's x range. So the three pages were read from the page images and typed out, in the extractor's format, into `sources/ibc/2019-08-06-amendment-act-2019.transcribed.txt` (not committed), then compared word for word with Tesseract: they agree except where Tesseract misread a label or dropped a word ("a", "(i)", "(1)"), each checked against the image. All 8 of its provisions apply.
+
+**Held out once more: the 2026 Act.** Read before any rule was written for it, the baseline fully understood **56 of its 71 provisions (79%)**, partly 9, not at all 6, against 38 of 75 (51%) for the 2017 to 2021 Acts before T18's rules. After rules for what it showed (renumbering a clause, omitting several sections or clauses at once, replacing a marginal heading, four sub-sections substituted together, "occurring at both the places"), 64 of 71; 56 of 71 apply in full, with nothing to check them against until IBBI or India Code publishes a consolidation after 2026. What fails: words the Bill's text layer breaks with a space the repair can't decide ("t he", "pro ceeding"), words that occur twice ("period of", "liquidate"), "the long line" and "the opening portion" (no operation for them), a Chapter omitted, and amendments to the 2021 Act's (ca), which wasn't applied.

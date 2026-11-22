@@ -258,3 +258,10 @@ def test_ibc_reconstruction_to_2018(tmp_path):
     assert len(outcomes) == 45 and outcomes.count("applied") >= 42 and outcomes.count("failed") <= 1
     check = report["checks"][0]
     assert check["files_same"] >= 201 and check["amended_same"] + check["amended_old_differences_only"] >= 35
+
+
+def test_unglue_mends_words_the_text_layer_breaks():
+    from pdf import unglue
+    text = "the costs and the costs, thecosts; th e following, the following, the following; section 7or section 9"
+    assert unglue([text]) == [
+        "the costs and the costs, the costs; the following, the following, the following; section 7 or section 9"]

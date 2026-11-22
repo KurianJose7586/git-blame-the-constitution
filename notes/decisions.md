@@ -156,3 +156,11 @@ API Setu's consumer sign-up (Partners portal, "Organization set-up") requires an
 - **"The Explanation" of a provision is found inside it when it is the only one,** because contract 2 nests a closing Explanation under the last clause. The same for a proviso. Contract 2 still can't nest a provision under an Explanation; that waits for the contract to change.
 - **The comparison counts a difference against the replay only if the 2016 text didn't already have it** against the same consolidation. The Gazette wins on words, as decided on 21 Nov, so IBBI departing from an amending Act is listed, not fixed.
 - **Scans are read with Tesseract** (installed on this machine; `$TESSERACT` or PATH elsewhere), through the same margin layout as digital pages. OCR text isn't trusted for quoted words.
+
+## 2026-11-23 (night): T18, the rest of the IBC
+
+- **The 2019 Act is transcribed from its scan,** not OCR'd: three pages, read from the page images and checked word for word against Tesseract's text (decision of 22 Nov: OCR text isn't trusted for quoted words). The transcription is a source file, in `sources/ibc/`.
+- **`last` joins `every`:** "occurring at the end" applies a word operation to the last occurrence. Both are optional fields in the schema.
+- **Provisos and Explanations that contract 2 nests differently are found only when exactly one fits:** an Explanation printed after a proviso is its sibling, so "in the second proviso, in Explanation I" falls back to "Explanation I"; the proviso of an Explanation is the first after it, before the text leaves its depth; a substituted or omitted proviso or Explanation takes the labelled list printed after it. A labelled target that skips a level ("clause (c)" of s. 224) is found when the provision has only one such label.
+- **IBBI's departures from the amending Acts are listed, not followed.** The Gazette wins on words (21 Nov).
+- **POCSO's sources:** the Ministry of Women and Child Development lists the Act (2.77 MB) and the 2019 amending Act (1.08 MB) at wcd.gov.in/documents/legislations; its copyright policy is the standard permission-by-email one. Not downloaded: waiting for your approval. The other amending Acts (the Criminal Law (Amendment) Acts, 2013 and 2018) and the Arbitration Act's are still to find; the Department of Legal Affairs' site refused automated browsing.

@@ -38,6 +38,7 @@ def provisions(text):
     kept = []
     for number, heading, lines in out:
         joined = " ".join(" ".join(lines).split())
+        joined = re.sub(r"(?<=[;:—] )(\(\w{1,5}\))(?=[a-z])", r"\1 ", joined)  # "; (e)in clause (t)": a label glued on
         if SKIP.search(heading) or re.search(r"hereby repealed|such repeal", joined):
             continue
         # A label starts a line after "—", ":", ";", ".", "; and" or "; or", not after a comma: "sub-sections (6),
@@ -45,7 +46,7 @@ def provisions(text):
         joined = re.sub(rf"(?<=[—:;.])\s+(?={LABEL})|(?:(?<=; and)|(?<=; or))\s+(?={LABEL})", "\n", joined)
         joined = re.sub(r"(?<=[—:;.])\s*(?=(?:Provided|Explanation)\b)", "\n", joined)
         joined = re.sub(r"(?<=—)\s*(?=[“\"'‘])", "\n", joined)
-        joined = re.sub(r"(?<=[.;:—”\"'’])\s+(?=\d+[A-Z]+\.\s+[A-Z])", "\n", joined)  # a new section inside a new Chapter
+        joined = re.sub(r"(?<=[.;:—”\"'’])\s+(?=\d+-?[A-Z]+\.\s*[A-Z(])", "\n", joined)  # a new section inside a new Chapter
         kept.append((number, heading, joined))
     return kept
 
