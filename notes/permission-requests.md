@@ -20,10 +20,7 @@ Drafts to send from your own address. Fill in the bracketed parts. Record replie
 >
 > The texts are reproduced verbatim and attributed. The Constitution text is from "The Constitution of India (as on 10 September 2026)" on legislative.gov.in, and the amending Acts were checked against their copies on India Code and the e-Gazette. The project is a research prototype; it is not sold, and carries no advertising.
 >
-> Your Copyright Policy asks for permission before material is reproduced, so I would be grateful for:
->
-> 1. Permission to reproduce the text of central Acts and of the Constitution, as published on legislative.gov.in and India Code, in this form, with attribution and a link to the official text on every page.
-> 2. Confirmation that the IndiaCode Legislative APIs on API Setu may be used for this project, at a modest rate (one request every few seconds), to keep the amendment histories up to date.
+> Your Copyright Policy asks for permission before material is reproduced, so I would be grateful for permission to reproduce the text of central Acts and of the Constitution, as published on legislative.gov.in and India Code, in this form, with attribution and a link to the official text on every page.
 >
 > While building it, we found a few places where the consolidated texts appear to differ from the Gazette. They are listed below, in case they are useful:
 >
@@ -68,15 +65,3 @@ Drafts to send from your own address. Fill in the bracketed parts. Record replie
 > [Your name]
 > [Institution, department]
 
----
-
-## 3. India Code's APIs through API Setu (automated access)
-
-India Code publishes its APIs through API Setu, the government API gateway. The user guide is at https://indiacode.gov.in/info/api-access. These steps need your own identity, so you do them yourself:
-
-1. Go to https://apisetu.gov.in, click **Create Account**, then **Sign Up via DigiLocker** on the "Become a Partner" page, and sign in with DigiLocker. Signing up means accepting API Setu's Terms of Use, so read them first.
-2. Log in to the Partners portal and note your **Client ID** on the Home screen.
-3. Open **Consume APIs**, then **Become a Consumer**, choose **APIs on API Setu**, and fill in the request. Say it is for this non-commercial research project.
-4. Once approved, subscribe to the **IndiaCode Legislative APIs** and keep the client credentials somewhere safe. Don't send them to Claude or commit them. T11 will read them from an environment variable.
-
-Until then, nothing reads India Code by script.

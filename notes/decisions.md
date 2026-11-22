@@ -131,3 +131,11 @@ API Setu's consumer sign-up (Partners portal, "Organization set-up") requires an
 - **Act mode is the same parser,** `--act`: Constitution-specific only in where it starts and what it calls things. The three T18 Acts go through it when their PDFs arrive.
 - **M0's two RTI slips (ss. 17(1) and 20(1)) are left as published** until you decide to rebuild india-law/rti-act; fixing them changes every commit's hash.
 - **Later the same day: fixed and rebuilt.** Sub-section (1) of ss. 17 and 20 is now a list item, with s. 20's provisos under it, and india-law/rti-act was force-pushed (`--force-with-lease`). The first commit keeps its hash; the other 13 and the year tags from 2005 on change. The word check reads a label glued to its word ("(1)Where", as DoPT and the official copy print it) as two words.
+
+## 2026-11-22: API Setu dropped
+
+- **API Setu is dropped.** Its sign-up needs an organisation (21 Nov), and you judged that unworkable. Nothing in M1 depended on it.
+- **Sources stay as T11's revision has them:** the e-Gazette, whose terms don't restrict access or reproduction, and PDFs you download by hand into `sources/`, one CAPTCHA each. India Code is read by script only with the Legislative Department's written permission.
+- **The Legislative Department's own site isn't a substitute.** Its Terms of Use (last updated 16 Jul 2025, read 22 Nov) are a disclaimer with no ban on automated access, but its Documents section holds the Constitution, lists of central Acts, ordinances, regulations and repeal lists, not the Acts' texts.
+- **What it costs later, to decide at M3:** the 20 acts cite at least 211 amending Acts (T9's table), all to download by hand; 93 belong to the four colonial-era acts, 58 of them from before 1950. Without those four, about 135 PDFs with the principal Acts. The Gazette watcher needs a feed without a CAPTCHA; the fallback is a pull request opened when a new Gazette PDF lands in `sources/`.
+- **The permission email to the Legislative Department no longer asks about API Setu;** it asks only for permission to reproduce. The steps for signing up are gone from `permission-requests.md`.
