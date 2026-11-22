@@ -147,3 +147,12 @@ API Setu's consumer sign-up (Partners portal, "Organization set-up") requires an
 - **Margin notes go where a consolidated text has them:** the heading run into its section ("2. Application.—"), as the parser already reads DoPT's RTI text, and an Act's number after its name, as M0's RTI files have it ("(19 of 1923)").
 - **The text layer is kept as it is, except for typesetting:** "( 5)" becomes "(5)" and U+FFFD becomes a dash. Words run together in the PDF ("thecosts") stay run together; splitting them would need a dictionary and could be wrong.
 - **`--gazette` is a mode of `ingest/pdf.py`, not a new file.** The parser needed one change: in act mode, a Part's title stops at "CHAPTER I".
+
+## 2026-11-22 (night): T18's replay
+
+- **Words that occur more than once need `every`.** "At both the places where they occur" and "wherever they occur" set it; without it, a word operation on words that occur twice in its target is an error, not a guess. The schema has the optional field; M0's operations don't use it and replay as before.
+- **The executor matches whole words.** "payment" no longer matches inside "repayment".
+- **A whole section is a file:** INSERT_NODE, SUBSTITUTE_NODE and OMIT_NODE on `s.29` add a file beside it, replace it, or delete it; a block starting "CHAPTER" adds a Chapter folder with its README. `/heading` targets a section's heading ("in the marginal heading").
+- **"The Explanation" of a provision is found inside it when it is the only one,** because contract 2 nests a closing Explanation under the last clause. The same for a proviso. Contract 2 still can't nest a provision under an Explanation; that waits for the contract to change.
+- **The comparison counts a difference against the replay only if the 2016 text didn't already have it** against the same consolidation. The Gazette wins on words, as decided on 21 Nov, so IBBI departing from an amending Act is listed, not fixed.
+- **Scans are read with Tesseract** (installed on this machine; `$TESSERACT` or PATH elsewhere), through the same margin layout as digital pages. OCR text isn't trusted for quoted words.

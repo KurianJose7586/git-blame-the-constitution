@@ -120,3 +120,47 @@ def test_replay_of_m0_history():
         k: set(v) for k, v in OPS.items()}
     target = re.compile(schema["$defs"]["target"]["pattern"])
     assert all(target.match(op["target"]) for r in results for op in r["ops"])
+
+
+def test_baseline_reads_the_ibc_drafting():
+    """Held-out drafting from the IBC's amending Acts (T18): context that follows the list's labels, "the words,
+    figures and letter", "at both the places", the marginal heading, whole sections and two sub-sections at once."""
+    from baseline import baseline
+    ops, misses = baseline(
+        'In section 30 of the principal Act,—\n'
+        '(i) in sub-section (1), after the words "resolution plan", the words, figures and letter "along with an '
+        'affidavit stating that he is eligible under section 29A" shall be inserted;\n'
+        '(ii) in sub-section (2),—\n'
+        '(A) in clauses (a) and (b), for the word "repayment" at both the places where it occurs, the word "payment" '
+        'shall be substituted;\n'
+        '(iii) in the marginal heading, for the word "Approval", the word "Approvals" shall be substituted.')
+    assert not misses
+    assert [(o["op"], o["target"], o.get("every")) for o in ops] == [
+        ("INSERT_WORDS", "s.30(1)", None), ("SUBSTITUTE_WORDS", "s.30(2)", True), ("SUBSTITUTE_WORDS", "s.30/heading", None)]
+    ops, _ = baseline('After section 29 of the principal Act, the following section shall be inserted, namely:—\n'
+                      '"29A. Persons not eligible to be resolution applicant.—A person shall not be eligible.".')
+    assert ops[0]["op"] == "INSERT_NODE" and ops[0]["target"] == "s.29" and ops[0]["block"].startswith("29A.")
+    ops, _ = baseline('In section 21 of the principal Act, for sub-sections (7) and (8), the following sub-sections '
+                      'shall be substituted, namely:—\n"(7) The Board may specify.\n(8) Save as otherwise provided.".')
+    assert [(o["op"], o["target"]) for o in ops] == [("OMIT_NODE", "s.21(8)"), ("SUBSTITUTE_NODE", "s.21(7)")]
+
+
+def test_executor_adds_sections_and_chapters():
+    files = {"part-ii/chapter-iii/section-054.md": "# 54. Dissolution.\n\n- (1) Text.\n",
+             "part-ii/chapter-iii/README.md": "# CHAPTER III\n\nLIQUIDATION\n"}
+    got = apply(files, [{"op": "INSERT_NODE", "target": "s.54", "position": "after",
+                         "block": "54Z. New section.—A person shall—\n(a) do this; and\n(b) do that."}])
+    assert got["part-ii/chapter-iii/section-054z.md"] == "# 54Z. New section.\n\nA person shall—\n- (a) do this; and\n- (b) do that.\n"
+    got = apply(files, [{"op": "INSERT_NODE", "target": "s.54", "position": "after", "block":
+                         "CHAPTER III-A PRE-PACKAGED PROCESS\n54A. Eligible debtors.—(1) An application.\n54B. Duties.—Text."}])
+    assert got["part-ii/chapter-iii-a/README.md"] == "# CHAPTER III-A\n\nPRE-PACKAGED PROCESS\n"
+    assert {"part-ii/chapter-iii-a/section-054a.md", "part-ii/chapter-iii-a/section-054b.md"} <= set(got)
+    assert "part-ii/chapter-iii/section-054.md" not in apply(files, [{"op": "OMIT_NODE", "target": "s.54"}])
+
+
+def test_words_that_occur_twice_need_every():
+    with pytest.raises(EditError, match="occurs 2 times"):
+        run({"op": "SUBSTITUTE_WORDS", "target": "art.15", "old": "wells", "new": "tanks"})
+    assert run({"op": "SUBSTITUTE_WORDS", "target": "art.15", "old": "wells", "new": "tanks", "every": True}).count("tanks") == 2
+    with pytest.raises(EditError, match="not found"):  # whole words only: "hops" isn't in "shops"
+        run({"op": "SUBSTITUTE_WORDS", "target": "art.15(2)(a)", "old": "hops", "new": "x"})

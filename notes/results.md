@@ -153,3 +153,32 @@ What the 37 misses need: inserting a whole new section, Chapter or Schedule (12;
 Not counted: the IBC (Amendment) Act, 2019 is a scan with no text layer (OCR isn't built), and the 2026 Act is printed as the Bill as passed, with line numbers that displace its section numbers (". (1)", "Code1"); it needs its own layout handling.
 
 **Caveat:** "understood" means the baseline produced operations and missed no instruction, not that they're right. Whether they're right is the replay against IBBI's consolidated copies, which hasn't run yet. The split into provisions and the rejoining of lines are a script in progress, not committed.
+
+## 2026-11-22 (night): T18's replay on the IBC, 2016 to 2021
+
+**How:** `uv run engine/reconstruct.py out/ibc/code-2016 out/ibc/replay <amending Acts and =checkpoints in order>`. The Code as gazetted, then each amending Act's provisions through the regex baseline and the executor, compared word for word with IBBI's consolidated Code at each of its six dates. The 2019 Act is read by OCR (Tesseract) from its scan; the J&K Adaptation Order, 2020 isn't applied (it amends dozens of Acts at once); the 2026 Act is past the last checkpoint and its Bill layout isn't read yet.
+
+A file "differs only where the Act as gazetted already did" when every difference left is one the unamended 2016 text already had against that consolidation: IBBI's spelling and typesetting ("judgement", "t h e", "co operation"), or its own slips against the Gazette. "New differences" are the rest: the replay's errors, and IBBI departing from the amending Act's words.
+
+| Checkpoint (IBBI) | Files matching word for word | Before any amendment | Amended files | … matching | … differing only where the 2016 text did | … with new differences |
+|---|---|---|---|---|---|---|
+| 17 Aug 2018 | 201 of 299 | 181 | 44 | 20 | 15 | 9 |
+| 6 Aug 2019 | 199 of 299 | 181 | 44 | 18 | 14 | 12 |
+| 13 Mar 2020 | 197 of 300 | 179 | 48 | 18 | 15 | 15 |
+| 18 Mar 2020 | 196 of 300 | 178 | 48 | 18 | 15 | 15 |
+| 23 Sep 2020 | 197 of 301 | 178 | 50 | 19 | 15 | 16 |
+| **12 Aug 2021** | **252 of 319** | 210 | **75** | **42** | **10** | **23** |
+
+| Amending provisions | Count |
+|---|---|
+| Applied in full | 69 of 78 |
+| Partly / failed | 5 / 4 |
+
+**Up to 2018, every difference is explained** (the two Acts the T18 test replays, `tests/test_parse.py`):
+- *Failed, on purpose:* 2018 Act s. 16, "after the words 'resolution professional'" in s. 22(3)(a), where the words occur three times ("interim resolution professional"); the executor won't pick one. 2018 Act s. 21, "for the word 'seventy-five'" in s. 28(3), where the Gazette's text layer has "seventy five". 2018 Act s. 22(vii), a proviso inside s. 29A's Explanation: contract 2 can't nest a provision under an Explanation, and numbering an Explanation ("shall be numbered as Explanation I") isn't an operation.
+- *IBBI departs from the amending Act* (the instrument wins, decision of 21 Nov): "section 7, 9 or section 10" (IBBI drops "section"), "no payment of an unpaid" ("any"), "in specified form, act" (IBBI adds "shall"), "clauses (a) and (c)" ("clause (a) and clause (c)"), "shall form part" ("shall be form part"), "conforms" ("confirms"), "sub-section" ("subsection"), and Act numbers IBBI leaves out ("(12 of 2003)", "(36 of 1963)"). The Gazette's own typo "secton" (2018 Act) is corrected by IBBI.
+- *Structure:* s. 2's last clause is followed by unlabelled text ("in relation to their insolvency ..."), which the parser joins to clause (e); substituting (e) drops it. The Gazette's x positions show it (flush left), but the parser doesn't use them.
+
+**From 2019 on, not every difference is checked yet.** The 23 files with new differences in 2021, by first reading: about half are IBBI's (spelling, typesetting such as "t he rem unera tion", Act numbers it omits, "7or" run together in the Gazette's text layer); the rest are the replay's: the OCR'd 2019 Act (two provisions not understood, s. 12 targeted at "(J)" for "(1)", its s. 5 run into s. 4, a clause read as "(6)" for "(b)"), s. 29A's Explanations again, "occurring at the end" (2020 Act, s. 5(15)), the margin headings of two new sections (54H, 54N), s. 208's sub-section, and s. 54A's sub-clause numbering and s. 66, still to look at.
+
+**What it took (held out, so this is the honest cost of the IBC):** the baseline needed whole sections and Chapters, provisos and Explanations as nodes, "the words, figures and letter", "at both the places" (now an `every` flag; without it, words that occur twice are an error rather than a guess), the marginal heading, "for sub-sections (7) and (8)", and context that follows the instruction list's own labels. The executor matches whole words only (before, "payment" would have matched inside "repayment"). M0's replay is unchanged: 12 exact, 13 after quotes, 15 same words.

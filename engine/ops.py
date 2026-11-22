@@ -73,7 +73,14 @@ def find(files, target):
     rest = target[m.end():]
     if not rest:
         return path, None, None, -1
+    if rest == "/heading":  # "in the marginal heading": the file's first line
+        return path, 0, 1, -1
     hits = [n for n in nodes(files[path]) if n[0] == rest]
+    if not hits and (tail := re.search(r"(/(?:explanation|proviso)\d*)+$", rest)):
+        # "the Explanation" of s.18 is printed after its last clause, where it nests (contract 2): if it is the
+        # only one of its kind anywhere inside the provision named, it is the one meant
+        inside = [n for n in nodes(files[path]) if n[0].startswith(rest[:tail.start()]) and n[0].endswith(tail[0])]
+        hits = inside if len(inside) == 1 else []
     if not hits:
         near = difflib.get_close_matches(rest, [n[0] for n in nodes(files[path])], n=3, cutoff=0.4)
         raise EditError(f"{target}: not found in {path}" + (f"; nearest: {', '.join(m[1] + n for n in near)}" if near else ""))
@@ -144,6 +151,32 @@ def render(block, depth, schedule):
     return [f"{'  ' * (depth + d)}- {line}" for d, line in structure(block, schedule)]
 
 
+def section_file(block, beside):
+    """(path, text) of a section an amendment inserts or substitutes, laid out as the parser lays out a section."""
+    from constitution import HEAD_END, article, flat  # here, not at the top: constitution imports this module
+    m = re.match(r"(\d+)([A-Z]*)\.\s", block)
+    if not m or not HEAD_END.search(block):
+        raise EditError(f"a new section needs a number and a heading, \"29A. Heading.—\": {block[:60]!r}")
+    head, lines, _ = article(block.split("\n"))
+    path = f"{PurePosixPath(beside).parent}/section-{int(m[1]):03d}{m[2].lower()}.md".lstrip("./")
+    return path, "\n".join([f"# {' '.join(flat(head).split())}", "", *(text for text, _ in lines)]) + "\n"
+
+
+def chapter_files(block, beside):
+    """{path: text} of a Chapter an amendment inserts: its README and its sections, in a folder beside the folder of
+    the section it follows ("CHAPTER III-A" after s.54 in part-ii/chapter-iii: part-ii/chapter-iii-a)."""
+    m = re.match(r"CHAPTER\s+([IVXL]+(?:-?[A-Z])?)\s+(.*?)\s*\n?(?=\d+[A-Z]*\.\s)", block, re.S)
+    if not m:
+        raise EditError(f"a new Chapter needs its number, title and sections: {block[:60]!r}")
+    number = re.sub(r"-?([a-z])$", r"-\1", m[1].lower())  # "III-A" and "IIIA" are both chapter-iii-a
+    folder = f"{PurePosixPath(beside).parent.parent}/chapter-{number}".lstrip("./")
+    out = {f"{folder}/README.md": f"# CHAPTER {m[1]}\n\n{' '.join(m[2].split())}\n"}
+    for section in re.split(r"\n(?=\d+[A-Z]*\.\s)", block[m.end():]):
+        path, text = section_file(section, f"{folder}/README.md")
+        out[path] = text
+    return out
+
+
 # --- The executor -----------------------------------------------------------------------------------------
 
 def apply(files, ops):
@@ -154,10 +187,21 @@ def apply(files, ops):
 
 def apply_one(files, op):
     name = op.get("op")
-    if name not in OPS or set(op) != {"op", *OPS[name]}:
+    if name not in OPS or set(op) - ({"every"} if name.endswith("_WORDS") else set()) != {"op", *OPS[name]}:
         raise EditError(f"{op}: expected {name} with fields {OPS.get(name)}")
     target = op["target"]
     path, first, end, depth = find(files, target)
+    if first is None and name in ("INSERT_NODE", "SUBSTITUTE_NODE", "OMIT_NODE") and path.rsplit("/", 1)[-1].startswith(
+            "section-"):  # a whole section is a file: added beside the one named, or replaced, or deleted
+        rest = {p: t for p, t in files.items() if p != path or name == "INSERT_NODE"}
+        if name == "OMIT_NODE":
+            return rest
+        if name == "INSERT_NODE" and op["block"].startswith("CHAPTER"):
+            return {**files, **chapter_files(op["block"], path)}
+        new_path, text = section_file(op["block"], path)
+        if name == "INSERT_NODE" and new_path in files:
+            raise EditError(f"{name} {target}: {new_path} exists already")
+        return {**rest, new_path: text}
     lines = files[path].split("\n")
     if first is None:  # a whole file: everything after the heading
         first = 1 if lines[0].startswith("# ") else 0
@@ -167,16 +211,20 @@ def apply_one(files, op):
 
     if name in ("SUBSTITUTE_WORDS", "OMIT_WORDS", "INSERT_WORDS"):
         needle = op["old"] if name == "SUBSTITUTE_WORDS" else op["anchor"] if name == "INSERT_WORDS" else op["text"]
-        if needle not in region:
+        words = re.compile(rf"(?<!\w){re.escape(needle)}(?!\w)")  # whole words: "payment" isn't in "repayment"
+        hits = len(words.findall(region))
+        if not hits:
             raise EditError(f"{name} {target}: {needle!r} not found{nearest(needle, region)}")
+        if hits > 1 and not op.get("every"):
+            raise EditError(f"{name} {target}: {needle!r} occurs {hits} times; name the provision it is in, or say every")
         if name == "SUBSTITUTE_WORDS":
-            region = region.replace(needle, op["new"])
+            region = words.sub(lambda _: op["new"], region)
         elif name == "INSERT_WORDS":
             if op["position"] not in ("after", "before"):
                 raise EditError(f"{name} {target}: position must be 'after' or 'before'")
-            region = region.replace(needle, f"{needle} {op['text']}" if op["position"] == "after" else f"{op['text']} {needle}")
-        else:
-            region = region.replace(f" {needle}", "") if f" {needle}" in region else region.replace(needle, "")
+            region = words.sub(lambda _: f"{needle} {op['text']}" if op["position"] == "after" else f"{op['text']} {needle}", region)
+        else:  # the space before the words goes with them
+            region = re.sub(rf"(?:\s|(?<!\w)){re.escape(needle)}(?!\w)", "", region)
         new = region.split("\n")
     elif name == "OMIT_NODE":
         new = []

@@ -4,12 +4,23 @@
     uv run ingest/pdf.py --gazette sources/ibc/2016-05-28-ibc-2016.pdf out/ibc/ibc-2016.txt   # an Act as gazetted
 
 Born-digital pages give their text layer. A page without one is a scan: it comes back empty and is listed by
-`scanned()`, so the caller can send it to OCR (not built yet) instead of silently losing it.
+`scanned()`, so it isn't silently lost; in --gazette mode a scan is read by OCR (Tesseract).
 """
+import csv
+import io
+import os
 import re
+import shutil
+import subprocess
 import sys
+import tempfile
+from collections import Counter
+from pathlib import Path
 
 from pypdf import PdfReader
+
+TESSERACT = (os.environ.get("TESSERACT") or shutil.which("tesseract")
+             or r"C:\Program Files\Tesseract-OCR\tesseract.exe")
 
 PAGE_BREAK = "\f"
 SAME_LINE = 6  # points; footnote markers sit about 5 above their line, lines are about 16 apart
@@ -45,10 +56,12 @@ def text(page):
 
 
 MARGIN = (100, 480)  # points: a Gazette page's body runs between its margin notes (x about 58 and 489)
-CITATION = re.compile(r"^((?:\d+|[IVXLC]+) (?:of|to) (\d{4}))\.?$")  # an Act's number: "18 of 2013.", "XXXVIII of 1949."
+CITATION = re.compile(r"^((?:Ord\.\s*)?(?:\d+|[IVXLC]+) (?:of|to) (\d{4}))\.?$")  # "18 of 2013.", "XXXVIII of 1949.", "Ord. 7 of 2017."
 YEAR = re.compile(r"(?:Act|Code|Procedure|Ordinance|Regulations?|Order)(?:,\s*|\s+)\d{4}\b|,\s*\d{4}\b"
-                  r"|Penal Code\b")  # cited without its year
+                  r"|Penal Code\b"  # cited without its year
+                  r"|^\d{4}\b")  # a name that wraps before its year: "Ordinance," / "2017"
 SIGNED = re.compile(r"Secretary to the Gov(?:t\.|ernment)\s+of\s+India\.?")  # the whole line: the signature
+SECTION = re.compile(r"[“\"‘']?\d+[A-Z]*\.\s*")
 
 
 def gazette(page):
@@ -57,7 +70,7 @@ def gazette(page):
     A section's heading, printed in the margin beside its first line, is run into that line ("2. Application.—The
     provisions ..."); an Act's number, printed in the margin beside its name, follows the name ("Companies Act, 2013
     (18 of 2013)"). The running header goes, and so does everything from the signature on. Returns (text, notes
-    that found no place)."""
+    that found no place). A scanned page is read by OCR, its words placed the same way."""
     runs = []
 
     def visit(chunk, cm, tm, font, size):
@@ -66,6 +79,8 @@ def gazette(page):
                          chunk.replace("\n", "").replace(chr(0xFFFD), "—")))  # some fonts lose the dash's mapping
 
     page.extract_text(visitor_text=visit)
+    if not runs:
+        runs = ocr(page)
 
     def lines(chunks):  # [[y, text]] top to bottom, each line's chunks left to right
         rows = []
@@ -99,19 +114,24 @@ def gazette(page):
             break
 
     lost, citations, inserts = [], [], {}  # inserts: {body row: [(position, text)]}
+    starts = [n for n, (_, text) in enumerate(body) if SECTION.match(text)]  # "2. ", or a quoted "29A. " in an amendment
     for side in margin:  # each margin on its own, so a citation on one side doesn't cut a heading on the other
         for k in range(len(side) - 1, 0, -1):  # a citation in two lines: "XXXVIII of" / "1949."
-            if re.fullmatch(r"(?:\d+|[IVXLC]+) (?:of|to)", side[k - 1][1]) and re.fullmatch(r"\d{4}\.?", side[k][1]):
+            if re.fullmatch(r"(?:Ord\.\s*)?(?:\d+|[IVXLC]+) (?:of|to)", side[k - 1][1]) and re.fullmatch(r"\d{4}\.?", side[k][1]):
                 side[k - 1][1] += " " + side.pop(k)[1]
+        for k in range(len(side) - 1, -1, -1):  # a citation and a heading in one run: "31 of 2016. Amendment"
+            if m := re.fullmatch(r"((?:\d+|[IVXLC]+) (?:of|to) \d{4}\.)\s+(\S.*)", side[k][1]):
+                side[k:k + 1] = [[side[k][0], m[1]], [side[k][0], m[2]]]
         heading = []
         for y, text in side + [(None, "")]:
-            if heading and (y is None or CITATION.match(text) or heading[-1][0] - y > 11):  # the heading ends here
+            level = y is not None and any(abs(body[n][0] - y) < 5 for n in starts)
+            if heading and (y is None or CITATION.match(text) or heading[-1][0] - y > 11
+                            or level and heading[-1][1].endswith(".")):  # the heading ends; the next may start here
                 title = joined([t for _, t in heading])
-                starts = [n for n, (by, bt) in enumerate(body)
-                          if abs(by - heading[0][0]) < 5 and re.match(r"[“\"]?\d+[A-Z]*\.", bt)]
-                if starts:
-                    n = min(starts, key=lambda n: abs(body[n][0] - heading[0][0]))
-                    m = re.match(r"[“\"]?\d+[A-Z]*\.\s*", body[n][1])
+                beside = [n for n in starts if abs(body[n][0] - heading[0][0]) < 5]
+                if beside:
+                    n = min(beside, key=lambda n: abs(body[n][0] - heading[0][0]))
+                    m = SECTION.match(body[n][1])
                     inserts.setdefault(n, []).append((m.end(), ("" if m[0][-1] == " " else " ") + f"{title}—"))
                 else:
                     lost.append(title)
@@ -143,6 +163,55 @@ def gazette(page):
     return "\n".join(text for _, text in body if text and not re.fullmatch(r"[—-]+", text)), lost
 
 
+def ocr(page):
+    """Runs (x, y, text) of a scanned page, in points, read by Tesseract from the page's JPEG: each word at the
+    height of its line, so a line's words stay together and margin notes split off by position as on a digital
+    page. Tesseract is found on PATH, in $TESSERACT, or where its Windows installer puts it."""
+    jpegs = [x.get_object() for x in page["/Resources"].get("/XObject", {}).values()
+             if "/DCTDecode" in str(x.get_object().get("/Filter"))]
+    if not jpegs:
+        return []
+    with tempfile.TemporaryDirectory() as folder:
+        image = Path(folder) / "page.jpg"
+        image.write_bytes(jpegs[0]._data)
+        tsv = subprocess.run([TESSERACT, str(image), "-", "-l", "eng", "--psm", "4", "tsv"], capture_output=True,
+                             encoding="utf-8", check=True).stdout
+    scale, height = float(page.mediabox.width) / int(jpegs[0]["/Width"]), float(page.mediabox.height)
+    runs, line_y = [], {}
+    for word in csv.DictReader(io.StringIO(tsv), delimiter="\t", quoting=csv.QUOTE_NONE):
+        if word["level"] == "5" and word["text"].strip():
+            y = line_y.setdefault((word["block_num"], word["par_num"], word["line_num"]), height - int(word["top"]) * scale)
+            runs.append((int(word["left"]) * scale, y, word["text"] + " "))
+    return runs
+
+
+def unglue(texts):
+    """Words the text layer runs together ("thecosts", "partyto"), split where the halves stand side by side at
+    least twice elsewhere in the same document and the run-together form appears nowhere else."""
+    found = re.findall(r"[A-Za-z]+", " ".join(texts))
+    once = {w for w, n in Counter(w.lower() for w in found).items() if n == 1}
+    pairs = Counter(f"{a} {b}".lower() for a, b in zip(found, found[1:]))
+
+    def split(m):
+        word = m[0]
+        if word.lower() in once:
+            for i in range(2, len(word) - 1):  # two letters a side: not "money s"
+                if pairs[f"{word[:i]} {word[i:]}".lower()] >= 2:
+                    return f"{word[:i]} {word[i:]}"
+        return word
+    return [re.sub(r"[A-Za-z]{4,}(?![-A-Za-z])", split, text) for text in texts]  # not "recommenda-"
+
+
+def gazetted(path):
+    """(page texts, margin notes with no place) of a Gazette PDF."""
+    texts, lost = [], []
+    for n, page in enumerate(PdfReader(path).pages, 1):
+        text, missed = gazette(page)
+        texts.append(text)
+        lost += [f"p. {n}: {note}" for note in missed]
+    return unglue(texts), lost
+
+
 def scanned(texts, min_chars=40):
     """1-based numbers of the pages with no usable text layer."""
     return [n for n, text in enumerate(texts, 1) if len(text.strip()) < min_chars]
@@ -153,11 +222,7 @@ if __name__ == "__main__":
     if len(args) != 2:
         sys.exit(__doc__)
     if "--gazette" in sys.argv:
-        texts, lost = [], []
-        for n, page in enumerate(PdfReader(args[0]).pages, 1):
-            text, missed = gazette(page)
-            texts.append(text)
-            lost += [f"p. {n}: {note}" for note in missed]
+        texts, lost = gazetted(args[0])
         print("\n  ".join(["margin notes with no place:"] + lost) if lost else "every margin note placed")
     else:
         texts = pages(args[0])

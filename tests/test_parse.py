@@ -230,3 +230,31 @@ def test_whole_ibc_as_gazetted():
     assert report["articles"] == 255 and report["schedules"] == 11 and not report.get("article_numbers_missing")
     assert report["e1"]["words_match"] == report["e1"]["files"] == 266
     assert "part-ii/chapter-i/README.md" in files and files["part-ii/README.md"].strip().endswith("CORPORATE PERSONS")
+
+
+def test_ibc_reconstruction_to_2018(tmp_path):
+    """T18 on the IBC: the Code as gazetted plus the 2017 and 2018 amending Acts, against IBBI's consolidated text
+    of 17 Aug 2018. The failures are the known ones (notes/results.md): an ambiguous "after the words", a hyphen
+    the Gazette's text layer lacks, and a proviso inside an Explanation, which contract 2 can't nest."""
+    acts = [ROOT / "sources" / "ibc" / f"{name}.pdf" for name in (
+        "2016-05-28-ibc-2016", "2018-01-18-amendment-act-2017", "2018-08-17-second-amendment-act-2018")]
+    consolidated = ROOT / "sources" / "ibc" / "consolidated-2018-08-17.pdf"
+    if not all(p.exists() for p in [*acts, consolidated]):
+        pytest.skip("the IBC's PDFs are not in sources/ibc/ (they aren't committed)")
+    from pdf import gazetted
+    import reconstruct
+    base = tmp_path / "code-2016"
+    files = constitution.parse(gazetted(acts[0])[0], act=True)[0]
+    for path, text in files.items():
+        (base / path).parent.mkdir(parents=True, exist_ok=True)
+        (base / path).write_text(text, encoding="utf-8")
+    steps = []
+    for act in acts[1:]:
+        (tmp_path / f"{act.stem}.txt").write_text("\f".join(gazetted(act)[0]), encoding="utf-8")
+        steps.append(str(tmp_path / f"{act.stem}.txt"))
+    (tmp_path / "c.txt").write_text("\f".join(pages(consolidated)), encoding="utf-8")
+    _, report = reconstruct.replay(base, [*steps, f"={tmp_path / 'c.txt'}"])
+    outcomes = [a["outcome"] for a in report["amendments"]]
+    assert len(outcomes) == 45 and outcomes.count("applied") >= 42 and outcomes.count("failed") <= 1
+    check = report["checks"][0]
+    assert check["files_same"] >= 201 and check["amended_same"] + check["amended_old_differences_only"] >= 35
