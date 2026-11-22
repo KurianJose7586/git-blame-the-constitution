@@ -119,3 +119,14 @@ API Setu's consumer sign-up (Partners portal, "Organization set-up") requires an
 - **Provisions inserted but not yet in force stay in the files, as printed,** and their footnotes are marked pending. The history will need an in-force date for them that doesn't exist yet.
 - **The parser is `engine/constitution.py`,** following the one-folder decision above, and it's Constitution-specific; a general act parser comes with T18. The footnote parser is `ingest/footnotes.py`, where KICKOFF puts it.
 - **Nothing parsed from the Constitution PDF is published** until the Legislative Department's permission or the legal opinion arrives (T10).
+
+## 2026-11-22: Schedules, silver history, Act mode
+
+- **Schedules are one file each,** `schedule-7.md`, headed as printed ("FIRST SCHEDULE", or "THE FIRST SCHEDULE" in an Act). Their headings ("PART A", "List I—Union List", "[Article 244(1)]", a form's number "III") are plain lines, and each run of entries between headings is its own list. A table is a row per line, leaders kept.
+- **The engine tells "2." from "(2)".** A Schedule's paragraph "2." and its sub-paragraph "(2)" were the same kind of label to `structure()`, so paragraph 2 nested under sub-paragraph (1). Not in Schedule mode, "N." labels are now their own kind. M0's builds are unchanged (same hashes), and the engine tests pass.
+- **A clause that opens with its sub-clause is split:** "(2)(a) There shall be" becomes "(2)" and "(a) There shall be", so `art.239AA(2)(a)` can be cited. The engine reads a label standing alone.
+- **Oath forms read "swear in the name of God / solemnly affirm"**, spaced as M0's RTI Act already has it.
+- **Silver histories are separate from gold ones.** `engine/rebuild.py` writes `out/constitution-silver.yaml`, never `history/`. The builder takes two optional fields for them: `placed` (the date an act is placed at when its enactment date is unknown; the trailer says "Enacted: unknown") and `footnotes` (the commit body when there's no amending text). A `note` in the history goes into the repository's README. M0's histories build exactly as before.
+- **A placeholder stands in for words no footnote quotes,** in square brackets and naming the change, so blame is right even where the old words aren't known. Placeholders aren't law and keep the history silver.
+- **Act mode is the same parser,** `--act`: Constitution-specific only in where it starts and what it calls things. The three T18 Acts go through it when their PDFs arrive.
+- **M0's two RTI slips (ss. 17(1) and 20(1)) are left as published** until you decide to rebuild india-law/rti-act; fixing them changes every commit's hash.

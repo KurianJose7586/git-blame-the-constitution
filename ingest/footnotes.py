@@ -28,25 +28,38 @@ OLD = re.compile(r"\bfor\s+[“\"]\s*(.+?)\s*[”\"]")
 PENDING = re.compile(r"not notif|to be notified|shall stand", re.I)
 
 
+def instrument_of(tail):
+    if m := CONSTITUTION.match(tail):
+        name = "The C" + re.sub(r"\(\s+", "(", " ".join(m[1].split()))[1:]
+        name = re.sub(r"\((.*?) Amendment\)", lambda o: "(" + " ".join(  # "One-hundred and fourth"
+            w if w == "and" else w[0].upper() + w[1:] for w in o[1].replace("-hundred", " Hundred").split()) + " Amendment)",
+                      name)
+    elif m := ORDER.match(tail):
+        name = f"C.O. {m[1]}"
+    elif m := NUMBERED.match(tail):
+        name = f"Act {m[1]} of {m[2]}"
+    elif m := NOTIFICATION.match(tail):
+        name = "Notification" + (f" {' '.join(m[1].split())}" if m[1] else "")
+    elif m := NAMED.match(tail):
+        name = ("" if m[1].startswith("The ") else "The ") + " ".join(m[1].split())
+    else:
+        return None
+    return re.sub(r"\s*,\s*(\d{4})$", r", \1", name)  # "Act,1977", "Act , 2003"
+
+
 def parse(text):
-    text = " ".join(text.replace("", " ").split())
+    text = " ".join(text.replace(chr(0xF02A), " ").split())  # the PDF's asterisk glyph
     text = re.sub(r"(?<!\S)((?:\w ){2,}\w)(?!\S)", lambda m: m[1].replace(" ", ""), text)  # "i n s ." -> "ins ."
     unquoted = QUOTED.sub("“”", text)
     kind = KIND.search(unquoted[:80])
     rest = unquoted[kind.end():] if kind else ""
-    tail = (m[1] if (m := re.search(r"\bby\s+(.*)", rest)) else rest.lstrip(" .,"))
-    instrument = None
-    if m := CONSTITUTION.match(tail):
-        instrument = "The C" + re.sub(r"\(\s+", "(", " ".join(m[1].split()))[1:].replace(" Act ,", " Act,")
-    elif m := ORDER.match(tail):
-        instrument = f"C.O. {m[1]}"
-    elif m := NUMBERED.match(tail):
-        instrument = f"Act {m[1]} of {m[2]}"
-    elif m := NOTIFICATION.match(tail):
-        instrument = "Notification" + (f" {' '.join(m[1].split())}" if m[1] else "")
-    elif m := NAMED.match(tail):
-        instrument = ("" if m[1].startswith("The ") else "The ") + " ".join(m[1].split())
-    section, wef, old = SECTION.search(tail), WEF.search(text), OLD.search(text)
+    # The instrument follows "by", but not every "by": "subs. by articles 230 and 231 by the Constitution (...)".
+    tails = [rest[m.end():] for m in re.finditer(r"\bby\s+", rest)] or [rest.lstrip(" .,")]
+    tail, instrument = next(((t, i) for t in tails if (i := instrument_of(t))), (tails[0], None))
+    section, wef = SECTION.search(tail), WEF.search(text)
+    old = (OLD.search(text)  # what a change replaced: "for “X”", "The words “X” omitted", "Cl. (a) re-lettered"
+           or re.search(r"[“\"]([^”\"]+)[”\"]\s+(?:\S+\s+){0,2}?omitted\b", text)
+           or re.search(r"(\(\w+\))\s+(?:shall stand\s+)?re-?(?:lettered|numbered)\b", text))
     return {
         "kind": KINDS[kind[1].lower().replace("-", "")] if kind else None,
         "instrument": instrument,

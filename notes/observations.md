@@ -92,3 +92,14 @@ Things noticed along the way: bugs, contradictions, surprises, dead ends. Append
 - **18 changes the text describes but which aren't in force,** some for decades: the 44th Amendment's rewrite of art. 22(4)–(7) "shall stand substituted" but was never notified (1978); some 42nd Amendment items are "date to be notified"; the 88th Amendment's s. 2 is "date not notifed" [sic].
 - **The PDF is current to 2026:** Kerala is "Keralam" (Kerala (Alteration of Name) Act, 2026), and a note on art. 124 says the Supreme Court now has "thirty-seven" other Judges (Supreme Court (Number of Judges) Amendment Act, 2026). Neither is a constitutional amendment.
 - **The parser rebuilt M0's hand-made Preamble and Article 15 byte for byte,** blame included: the first check of M0's files that a person didn't do.
+
+## 2026-11-22: The Schedules, the silver history, and the RTI Act through the parser
+
+- **Word checks miss structure.** "(2)(a) There shall be" in art. 239AA has no space between its labels, so clauses (2) to (8) ran together into one line, and E1 still passed, since no words were lost. Found while rebuilding history, when a footnote's bracket landed in the wrong line. A check that every clause label sits at the start of its own line would have caught it.
+- **One note number, two brackets.** "7[Puducherry]" can appear twice on a page with one footnote 7. Undoing it as one span (first bracket to last) wiped out the lines between.
+- **Brackets the source opens and never closes get "closed" by a stray "]" far away.** In the Fourth Schedule's seat table one note ended up covering 838 lines, into the Ninth Schedule. No bracket crosses a Part or a Schedule, so one still open there is now treated as never closed.
+- **Retrospective dates break date order.** The 70th Amendment changed art. 239AA with effect from 21 Dec 1991, before the 69th Amendment that inserted the article came into force (1 Feb 1992).
+- **Compound footnotes carry the Emergency's history:** 35 notes like "Ins. by the Constitution (Thirty-eighth Amendment) Act, 1975 … and omitted by the Constitution (Forty-fourth Amendment) Act, 1978" record a change and its reversal in one line. Read as one change, the history loses both.
+- **Typesetting in the Fourth Schedule's table:** "14[1[2[** * * *… *]" opens three brackets and closes one; renumbered rows read "4[3.] Assam"; and the Sixth Schedule has "18.* * * * *" with no space and a note glued to a paragraph number ("21. Autonomous districts" is note 2 on paragraph 1, as "731D." was on art. 31D).
+- **The same footnote parser read DoPT's RTI notes** with one exception, "Omitted by G.S.R. 235(E)", which names a notification, not an Act.
+- **M0's own RTI files have two formatting slips,** found by the parser, not by a person: s. 17(1) and s. 20(1) aren't list items. They're published; fixing them means rebuilding india-law/rti-act.

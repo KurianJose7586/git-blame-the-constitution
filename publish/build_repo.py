@@ -41,19 +41,22 @@ def commit_date(enacted, n):
 
 def message(act, sec):
     section = None if sec.get("section") is None else str(sec["section"])
-    in_force = sec.get("in_force")
+    in_force, enacted = sec.get("in_force"), act.get("enacted")
+    retrospective = sec.get("retrospective")  # silver histories say so; otherwise it follows from the dates
+    if retrospective is None:
+        retrospective = bool(in_force and enacted and in_force < enacted)
     trailers = {
         "Amending-Act": act["act"],
         "Instrument": act.get("instrument"),  # e.g. "notification" when the change isn't made by an Act
         "Section": section,
         "Gazette": act.get("gazette"),
-        "Enacted": act["enacted"],
+        "Enacted": enacted or "unknown",
         "In-Force": in_force or "unknown",
-        "Retrospective": "yes" if in_force and in_force < act["enacted"] else "no",
+        "Retrospective": "yes" if retrospective else "no",
         "Source": act["source"],
     }
     subject = act["act"] + (f", s. {section}" if section else "")
-    body = (sec.get("text") or "").strip()
+    body = (sec.get("text") or "").strip() or "\n".join(sec.get("footnotes", []))
     footer = "\n".join(f"{k}: {v}" for k, v in trailers.items() if v is not None)
     return "\n\n".join(p for p in (subject, body, footer) if p) + "\n"
 
@@ -78,11 +81,12 @@ def build(history_path, out):
     out.mkdir(parents=True)
     git(out, "init", "-q", "-b", "main")
     git(out, "config", "core.autocrlf", "false")  # same bytes, so same hashes, on Windows and Linux
-    write(out, "README.md", README.format(**history))
+    write(out, "README.md", README.format(**history) + (f"\n{history['note']}\n" if history.get("note") else ""))
 
-    commits = []  # (enacted, sha) in order
+    commits = []  # (date placed, sha) in order
     for act in history["amendments"]:
-        if commits and act["enacted"] < commits[-1][0]:
+        day = act.get("enacted") or act["placed"]  # a silver history places an act whose enactment is unknown
+        if commits and day < commits[-1][0]:
             sys.exit(f"{act['act']}: amendments must be in order of enactment")
         for sec in act["sections"]:
             for path, text in sec["files"].items():
@@ -90,14 +94,14 @@ def build(history_path, out):
             git(out, "add", "-A")
             if not git(out, "status", "--porcelain"):
                 sys.exit(f"{message(act, sec).splitlines()[0]}: changes nothing")
-            when = commit_date(act["enacted"], len(commits) + 1)
+            when = commit_date(day, len(commits) + 1)
             env = {
                 **os.environ,
                 "GIT_AUTHOR_NAME": act["act"], "GIT_AUTHOR_EMAIL": AUTHOR_EMAIL, "GIT_AUTHOR_DATE": when,
                 "GIT_COMMITTER_NAME": COMMITTER[0], "GIT_COMMITTER_EMAIL": COMMITTER[1], "GIT_COMMITTER_DATE": when,
             }
             git(out, "commit", "-q", "--cleanup=whitespace", "-F", "-", env=env, input=message(act, sec))
-            commits.append((act["enacted"], git(out, "rev-parse", "HEAD").strip()))
+            commits.append((day, git(out, "rev-parse", "HEAD").strip()))
 
     # Completed years only, so a tag never moves once the year is over.
     for year in range(commits[0][0].year, date.today().year):

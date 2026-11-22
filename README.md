@@ -52,11 +52,13 @@ M1 has started: the edit operations and executor (`engine/ops.py`), a first rege
 uv run engine/replay.py history/constitution.yaml history/rti-act.yaml
 ```
 
-The whole current Constitution (Preamble and Parts I–XXII, 471 articles) now parses from the Legislative Department's PDF into law files, with each of its 499 footnotes linked to the lines it covers and the amendment that made them. Every article's words match the source, and the Preamble and Article 15 come out identical to M0's hand-built files. The output stays local until the permission requested under T10 arrives:
+The whole current Constitution (the Preamble, 471 articles and the 12 Schedules) now parses from the Legislative Department's PDF into law files, with each of its 772 footnotes linked to the lines it covers and the amendment that made them. Every file's words match the source, and the Preamble and Article 15 come out identical to M0's hand-built files. From those footnotes, `engine/rebuild.py` rebuilds a silver history of the whole Constitution, 441 commits back to 1950, which replays forwards to exactly today's text; `git blame` works on every line. The same parser, with `--act`, reproduces M0's RTI Act. All of this stays local until the permission requested under T10 arrives:
 
 ```
 uv run ingest/pdf.py sources/coi-2026-09-10.pdf out/coi.txt
 uv run engine/constitution.py out/coi.txt out/constitution-current
+uv run engine/rebuild.py out/coi.txt out/constitution-silver.yaml
+uv run publish/build_repo.py out/constitution-silver.yaml out/constitution-silver
 ```
 
 Tests: `uv run pytest` and `node --test reader/app.test.mjs`.

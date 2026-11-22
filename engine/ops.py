@@ -23,7 +23,7 @@ OPS = {  # op -> its fields besides "op"; engine/ops.schema.json says the same f
     "RENUMBER": ("target", "label"),
 }
 ITEM = re.compile(r"^( *)- (.*)$")
-LABEL = re.compile(r"^\(([0-9]+[A-Z]*|[a-z]{1,6}|[A-Z])\)\s|^([0-9]+[A-Z]*)\.\s")
+LABEL = re.compile(r"^\(([0-9]+[A-Z]*|[a-z]{1,6}|[A-Z])\)(?:\s|$)|^([0-9]+[A-Z]*)\.\s")  # "(2)" alone: "(2)(a) ..."
 FILE_ID = re.compile(r"^(preamble|art\.\d+[A-Z]*|s\.\d+[A-Z]*|sch\.\d+)")
 
 
@@ -114,12 +114,15 @@ def kind(label, stack, nxt):
 def structure(block, schedule=False):
     """[(depth, line)] for a block, depth relative to its first provision, in contract 2's formatting."""
     lines = [" ".join(l.split()) for l in block.split("\n") if l.strip()]
-    labels = [(m[1] or m[2]) if (m := LABEL.match(l)) else None for l in lines]
+    matches = [LABEL.match(l) for l in lines]
+    labels = [(m[1] or m[2]) if m else None for m in matches]
     out, stack = [], []
     for n, line in enumerate(lines):
         if labels[n]:
             label = labels[n]
-            k = kind(label, stack, next((x for x in labels[n + 1:] if x), None))
+            # "2." (a Schedule's paragraph or entry) and "(2)" (its sub-paragraph) are different lists
+            dotted = bool(matches[n][2]) and not schedule
+            k = "para" if dotted else kind(label, stack, next((x for x in labels[n + 1:] if x), None))
             levels = [i for i, s in enumerate(stack) if s[0] == k]
             fits = [i for i in reversed(levels) if follows(label, stack[i][1])]
             depth = fits[0] if fits else levels[-1] if levels and label not in ("1", "a", "i", "A") else len(stack)

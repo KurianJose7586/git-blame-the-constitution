@@ -58,3 +58,56 @@ Tests: `tests/test_parse.py`, 13 tests, two of them on the whole PDF (skipped wh
 - **The footnote parser was written while reading these footnotes,** so 100% is in-sample. T15's done-when is the three T18 acts, not run yet. "Instrument found" isn't checked note by note; the list of 107 instruments was read by eye.
 - **The oath forms in arts. 60, 69 and 159 stack their alternatives** ("swear in the name of God" over "solemnly affirm"). Read in order, the alternative lands mid-sentence: "faithfully execute the office solemnly affirm of President". Every word is there; the layout isn't.
 - **Provisions inserted but not yet in force are in the files as printed** (arts. 330A, 332A and 334A by the 106th Amendment, for example), and their footnotes are marked pending in provenance.json.
+
+## 2026-11-22: The Schedules, a silver history of the whole Constitution, and the parser on an Act
+
+### 1. The whole Constitution, Schedules included (T13, T15)
+
+Same command as above; parsed pages now run to 381, the end of the Twelfth Schedule. Fixed since yesterday: the oath forms now read "swear in the name of God / solemnly affirm"; "(2)(a) There shall be" (art. 239AA, and arts. 6, 112, 233A, 371A) is a clause and its first sub-clause, where before everything after it ran together. Word checks hadn't caught that, because no words were lost.
+
+| | Count |
+|---|---|
+| Files | 532: 471 articles, 12 Schedules, 48 Part and Chapter headings, the Preamble |
+| **E1, words:** article and Schedule files whose words equal their source's | **483 / 483** |
+| **E1, round trip:** list items that `structure()` reads back the same, each list on its own | **2760 / 2760** |
+| Footnotes | 772 |
+| … recording a change, with the instrument found | **732 / 736** (the 4: three state-government notifications and one "s. 74 and Fourth Sch. of" an Act) |
+| Brackets the source never closes / closes twice | 27 / 2 (the extra "]" are on pp. 330 and 375) |
+| Against M0: Preamble, Part III heading, Article 15 | still byte-identical |
+
+The Schedules' tables (First, Fourth, and the Sixth's table of tribal areas) come out a row per line. Where a "Name" cell wraps ("The Andaman / and Nicobar / Islands"), its pieces interleave with the next column's text: every word is there, but not in reading order.
+
+### 2. A silver history of the whole Constitution, rebuilt from its footnotes
+
+**How:** `uv run engine/rebuild.py out/coi.txt out/constitution-silver.yaml`, then `uv run publish/build_repo.py out/constitution-silver.yaml out/constitution-silver`. Each footnoted change is undone on today's text, newest first. An insertion comes out; a substitution or omission puts back the words its footnote quotes; where it quotes nothing, a bracketed placeholder ("[before The Constitution (Seventh Amendment) Act, 1956, s. 2: not quoted in the footnote]") stands in, so blame is still right. Compound notes ("Ins. by the 38th Amendment … and omitted by the 44th") are two changes.
+
+| | Count |
+|---|---|
+| Commits (one per section of each instrument) | 441 |
+| Changes undone: words put back as quoted / insertions removed / placeholders | 261 / 268 / 242 |
+| Changes that couldn't be undone (listed in the report) | 11 |
+| **Replayed forwards, the history gives today's text** | **exactly** |
+| The rebuilt 1950 text | 393 of 395 articles, Schedules 1–8, 160 placeholders |
+| **1950 Article 15 against M0's hand-made one** | **identical** |
+| 1950 Preamble against M0's | identical but for one letter: "Unity of the Nation", the footnote's misquote of the 42nd Amendment (observed 21 Nov) |
+
+`git blame` on Article 19 in the result names the First (1951), Sixteenth (1963), Forty-fourth (1978) and Ninety-seventh (2011) Amendments on the right lines.
+
+**Caveats:** silver, not gold, and local only.
+- **Placement, not enactment.** Commits sit at in-force dates; the footnotes give no enactment dates, so the trailers say "Enacted: unknown". A change inside another change's brackets is placed after it whatever the dates say: the 70th Amendment changed art. 239AA "w.e.f. 21-12-1991", before the 69th inserted it (1 Feb 1992).
+- **Footnotes' words are evidence, not text.** The Preamble's "Unity" shows one misquote; others won't be visible without the amending Acts.
+- **What can't be rebuilt.** Art. 238 (Part VII) isn't in today's text at all; the original art. 243 is hidden behind a compound note ("Original Part IX … omitted … Part IX ins. by the 73rd"). Changes noted as "amended in its application to the State of Assam" aren't changes to this text and are skipped.
+- **Ordering among same-day changes** follows the Act's year, then nesting, so two changes on one day by Acts of the same year can be swapped.
+
+### 3. The parser on an Act: the RTI Act from DoPT's text
+
+**How:** `uv run engine/constitution.py --act sources/rti-act-dopt-2025-11-18.txt out/rti-act-current`, the text extracted from DoPT's consolidated PDF in T7. Act mode: the preamble runs from "An Act to" to "BE it enacted", Chapters are folders, files are `section-NNN.md`, and parsing stops at the Bill's Statement of Objects and Reasons.
+
+| | Count |
+|---|---|
+| Files, against M0's hand-built repository | 40 and 40, the same paths |
+| E1 words / round trip | 33 / 33, 317 / 317 |
+| Footnotes understood | 16 / 17 (the one: "Omitted by G.S.R. 235(E) dated 27-3-2008", which names no Act) |
+| Files identical to M0's | 33 of 40 |
+
+The 7 that differ: 5 where M0 follows the Gazette over DoPT on purpose ("expedient", "suo motu", "(24 of 2019)", "thereunder", Second Schedule entries 8 and 27; see tests/official/rti-act/footnotes.yaml), and **2 slips in M0's published files** that the parser gets right: in s. 17 and s. 20, sub-section (1) isn't a list item (s. 20's reads "(1)Where", as DoPT printed it).
