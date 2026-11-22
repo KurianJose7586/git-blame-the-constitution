@@ -1,6 +1,6 @@
 # Permission requests (T10)
 
-Drafts to send from your own address. Fill in the bracketed parts. Record replies in `decisions.md`.
+Requests 1 and 2 went out from your own address on 21 Nov 2026, worded as below apart from small edits. Request 3 is still to send. Record replies in `decisions.md`.
 
 ---
 
@@ -20,7 +20,10 @@ Drafts to send from your own address. Fill in the bracketed parts. Record replie
 >
 > The texts are reproduced verbatim and attributed. The Constitution text is from "The Constitution of India (as on 10 September 2026)" on legislative.gov.in, and the amending Acts were checked against their copies on India Code and the e-Gazette. The project is a research prototype; it is not sold, and carries no advertising.
 >
-> Your Copyright Policy asks for permission before material is reproduced, so I would be grateful for permission to reproduce the text of central Acts and of the Constitution, as published on legislative.gov.in and India Code, in this form, with attribution and a link to the official text on every page.
+> Your Copyright Policy asks for permission before material is reproduced, so I would be grateful for:
+>
+> 1. Permission to reproduce the text of central Acts and of the Constitution, as published on legislative.gov.in and India Code, in this form, with attribution and a link to the official text on every page.
+> 2. Confirmation that the IndiaCode Legislative APIs on API Setu may be used for this project, at a modest rate (one request every few seconds), to keep the amendment histories up to date.
 >
 > While building it, we found a few places where the consolidated texts appear to differ from the Gazette. They are listed below, in case they are useful:
 >
@@ -65,3 +68,17 @@ Drafts to send from your own address. Fill in the bracketed parts. Record replie
 > [Your name]
 > [Institution, department]
 
+---
+
+## 3. Forward the first request to legislative.gov.in's Web Information Manager
+
+The Constitution text comes from legislative.gov.in, whose Copyright Policy asks for permission "by sending a mail to us" without giving an address. Its Contact Us page lists, under "Website Related", the Web Information Manager, LD (Deputy Legislative Counsel): atulkr.singh@gov.in. India Code's support desk may not pass the first request on, so forward it there with this note on top:
+
+> Dear Sir/Madam,
+>
+> The Copyright Policy of legislative.gov.in asks that permission to reproduce its material be requested by email. I sent the request below to India Code's support address on 21 November 2026, and am forwarding it to you as the Web Information Manager, since the Constitution text in this project is taken from "The Constitution of India (as on 10 September 2026)" on legislative.gov.in.
+>
+> Please disregard point 2 (API Setu); it is no longer needed. Point 1, permission to reproduce, is the request.
+>
+> Yours faithfully,
+> [Your name]
