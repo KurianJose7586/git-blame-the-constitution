@@ -1,6 +1,6 @@
 # Permission requests (T10)
 
-Requests 1 and 2 went out from your own address on 21 Nov 2026, worded as below apart from small edits. Request 3 is still to send. Record replies in `decisions.md`.
+Requests 1 and 2 went out from your own address on 21 Nov 2026, and request 3 on 22 Nov, worded as below apart from small edits. Record replies in `decisions.md`.
 
 ---
 
