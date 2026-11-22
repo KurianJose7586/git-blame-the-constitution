@@ -164,3 +164,9 @@ API Setu's consumer sign-up (Partners portal, "Organization set-up") requires an
 - **Provisos and Explanations that contract 2 nests differently are found only when exactly one fits:** an Explanation printed after a proviso is its sibling, so "in the second proviso, in Explanation I" falls back to "Explanation I"; the proviso of an Explanation is the first after it, before the text leaves its depth; a substituted or omitted proviso or Explanation takes the labelled list printed after it. A labelled target that skips a level ("clause (c)" of s. 224) is found when the provision has only one such label.
 - **IBBI's departures from the amending Acts are listed, not followed.** The Gazette wins on words (21 Nov).
 - **POCSO's sources:** the Ministry of Women and Child Development lists the Act (2.77 MB) and the 2019 amending Act (1.08 MB) at wcd.gov.in/documents/legislations; its copyright policy is the standard permission-by-email one. Not downloaded: waiting for your approval. The other amending Acts (the Criminal Law (Amendment) Acts, 2013 and 2018) and the Arbitration Act's are still to find; the Department of Legal Affairs' site refused automated browsing.
+
+## 2026-11-23: POCSO
+
+- **POCSO's base text is rebuilt backwards from India Code's footnotes,** because no clean copy of the 2012 Act was found (the ministry's is a badly OCR'd scan; the e-Gazette doesn't index it). Checked against the scan's OCR (95.5% of words in order) and kept silver: a forward replay on it tests the amending Act's instructions, not the base.
+- **India Code's consolidated text is used locally for this test only,** as T18 intended ("compared with India Code's current text"). It came from the Jharkhand High Court's site, not from India Code, and nothing from it is published.
+- **The comparison also takes a folder of law files,** compared file by file, when the consolidation has been parsed already.

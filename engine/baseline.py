@@ -14,10 +14,10 @@ UNLABELLED = (r"(?:the\s+)?(?:(?P<nth>first|second|third|fourth)\s+)?(?P<unlabel
               r"(?:\s+(?P<numeral>I{1,3}|IV|[1-4])\b)?")  # "Explanation II" is the second Explanation
 NODE = (r"(?:(?P<kind>sub-section|sub-clause|clause|article|section|serial number|S\.\s?No\.|item|entry)\s*"
         r"(?:\((?P<label>[0-9A-Za-z]+)\)|(?<=[a-z.] )(?P<bare>[0-9]+[A-Z]*))"  # "clause (4)", "section 29", "item 3"
-        r"(?:\s+and\s+the\s+entr(?:y|ies)\s+relating\s+thereto)?(?:\s+as\s+so\s+re-?numbered)?|" + UNLABELLED + ")"
-        + OF_ACT)
-RENUMBERED = re.compile(r"\b(?:sub-section|sub-clause|clause)\s*\((?P<old>\w+)\)\s+shall\s+be\s+re-?numbered\s+as\s+"
-                        r"(?:sub-section|sub-clause|clause)\s*\((?P<new>\w+)\)", re.I)  # "(2A) ... as clause (2B)"
+        r"(?:\s+and\s+the\s+entr(?:y|ies)\s+relating\s+thereto)?(?:\s+as\s+so\s+re-?(?:numbered|lettered))?|"
+        + UNLABELLED + ")" + OF_ACT)
+RENUMBERED = re.compile(r"\b(?:sub-section|sub-clause|clause)\s*\((?P<old>\w+)\)\s+shall\s+be\s+re-?(?:numbered|lettered)"
+                        r"\s+as\s+(?:sub-section|sub-clause|clause)\s*\((?P<new>\w+)\)", re.I)  # "(a) ... as clause (aa)"
 WORDS = r"(?:the\s+)?(?:words?|figures?|letters?|brackets?)(?:(?:,|\s+and)\s+(?:words?|figures?|letters?|brackets?))*,?"
 PLACES = (r"(?:\s*(?:(?P<every>(?:at\s+(?:both|all)\s+the\s+places\s+where|wherever)\s+(?:they|it)\s+occurs?"
           r"|occurring\s+at\s+(?:both|all)\s+the\s+places)"
@@ -92,7 +92,9 @@ def list_kind(line):
     if not m:
         return None
     label = m[1]
-    return ("num" if label[0].isdigit() else "upper" if label.isupper()
+    return ("num" if label[0].isdigit()
+            else "Roman" if re.fullmatch(r"(?=[IVX])X{0,3}(IX|IV|V?I{0,3})", label)  # "(I) in clause (j)" holds "(A)"
+            else "upper" if label.isupper()
             else "roman" if re.fullmatch(r"(?=[ivx])x{0,3}(ix|iv|v?i{0,3})", label) else "alpha")
 
 

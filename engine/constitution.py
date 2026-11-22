@@ -32,12 +32,12 @@ NOTE = re.compile(r"^(\d+)(?:\.\s*|\s+)(?=\S)|^(\uf02a+)\s*|^(\*+)\s+(?=[A-Z])")
 NOTE_NEXT = re.compile(r"^(\d+)(?:\.\s*|\s+(?=[A-Z][a-z]))(?=\S)|^(\uf02a+)\s*|^(\*+)\s+(?=[A-Z])")
 PART = re.compile(r"^PART\s+([IVXL]+[A-Z]?)$")
 ORDINALS = "FIRST SECOND THIRD FOURTH FIFTH SIXTH SEVENTH EIGHTH NINTH TENTH ELEVENTH TWELFTH".split()
-SCHEDULE = re.compile(rf"^(?:THE\s+)?({'|'.join(ORDINALS)})\s+SCHEDULE$")
+SCHEDULE = re.compile(rf"^(?:\d+\s+)?(?:THE\s+)?(?:({'|'.join(ORDINALS)})\s+)?SCHEDULE$")  # "16 THE SCHEDULE": an Act's only one
 ENTRY = re.compile(r"^(\d+[A-Z]*)(?:\.\s|\.?\s*\*)")  # a Schedule's paragraph or entry: "1. Interpretation.—", "18.* * *"
 CHAPTER = re.compile(r"^CHAPTER\s+([IVXL]+)\.\s*—\s*(.*)$")
 ACT_CHAPTER = re.compile(r"^CHAPTER\s+([IVXL]+[A-Z]?)$")
 ENACTING = re.compile(r"^(?:An Act to|WHEREAS|AND WHEREAS|Now,?\s+THEREFORE|BE it enacted)")
-ARTICLE = re.compile(r"^\[?(\d+)([A-Z]*)\.\s")  # "[232. Interpretation.—...]": an omitted article, bracketed
+ARTICLE = re.compile(r"^\[?(\d+)([A-Z]*)\.(?:\s|(?=[A-Z][a-z]))")  # "[232. Interpretation.—...]", "41.Provisions"
 LABEL = re.compile(r"^\((\d+[A-Z]*|[a-z]{1,6}|[A-Z])\)(?=\s|\*|$|\()")  # "(f)* * *": an omitted clause
 # A provision that opens with two labels, "(2)(a) There shall be" or "(3) (a) Subject to": clause (2) starts with
 # its sub-clause (a). Split after the first label, so each can be cited, as art.239AA(2)(a).
@@ -228,7 +228,7 @@ def segment(stream, act=False):
             if text == "PREAMBLE" or act and text.startswith("An Act to"):
                 units.append(["preamble", [] if text == "PREAMBLE" else [line]])
         elif m := SCHEDULE.match(text):
-            units.append(["schedule", ORDINALS.index(m[1]) + 1, line, []])
+            units.append(["schedule", ORDINALS.index(m[1]) + 1 if m[1] else 1, line, []])
             starts[i] = "part"
         elif units[-1][0] == "schedule":  # a Schedule runs to the next one: no Parts or articles inside
             units[-1][-1].append(line)

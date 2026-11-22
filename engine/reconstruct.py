@@ -20,7 +20,7 @@ from baseline import baseline
 from ops import FILE_ID, EditError, apply_one, file_id
 
 SKIP = re.compile(r"Short title|Repeal and savings|^Ord\.|Validation|of Act \d+ of \d{4}")
-LABEL = r"\((?:\d+[A-Z]*|[a-z]{1,6}|[A-Z])\)\s"
+LABEL = r"\((?:\d+[A-Z]*|[a-z]{1,6}|[A-Z]|[IVX]{2,5})\)\s"  # "(2A)", "(ii)", "(B)", "(II)"
 
 
 def provisions(text):
@@ -93,6 +93,13 @@ def consolidated(path):
 def compare(files, path):
     """Which law files' words appear, in order and with nothing missing or added, in the consolidated text. Words
     the consolidated text has between two files count against the file before."""
+    if Path(path).is_dir():  # law files already parsed from a consolidation: compared file by file
+        theirs = load(path)
+        differ = {p: [f"{' '.join(words(files.get(p, '')))[:80]!r} -> {' '.join(words(theirs.get(p, '')))[:80]!r}"]
+                  for p in set(files) | set(theirs)
+                  if words(re.sub(r"^#+ |^\s*- |\*", "", files.get(p, ""), flags=re.M))
+                  != words(re.sub(r"^#+ |^\s*- |\*", "", theirs.get(p, ""), flags=re.M))}
+        return {"files": len(files), "files_same": len(set(files) - set(differ)), "differ": differ}
     ours, owner = [], []
     for p in in_order(files):
         found = words(re.sub(r"^#+ |^\s*- |\*", "", files[p], flags=re.M))

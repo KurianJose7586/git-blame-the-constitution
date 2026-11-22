@@ -129,3 +129,10 @@ Things noticed along the way: bugs, contradictions, surprises, dead ends. Append
 - **Drafting skips levels the tree has.** "Clause (c)" of s. 224 is in sub-section (2), and the amendment doesn't say so; it is found because it is the only clause (c) in the section. In s. 208, which has two, it isn't.
 - **"Explanation I" is numbered by amendment:** "the Explanation occurring after clause (j) shall be numbered as Explanation I, and in Explanation I as so numbered, for the proviso ...". The proviso in it, and the proviso's own list (A) to (C), follow the Explanation in the file without nesting under it.
 - **The Department of Legal Affairs' site refused the browser with Akamai's "Access Denied"** while looking for the Arbitration Act's amendments. Not worked around.
+
+## 2026-11-23: POCSO and the e-Gazette
+
+- **The e-Gazette's "Search by Bill / Assent / Act" needs no CAPTCHA,** but a document opens in a new tab through the session; the browser pane opens new tabs only from your clicks, and opening the document address directly was refused. Saving e-Gazette files stays with you.
+- **The e-Gazette's index has gaps:** the Arbitration Act, 1996 and its three amending Acts, and the Criminal Law (Amendment) Act, 2018, are there (Gazette IDs 48447, 167377, 210414, 225832; 188472); the POCSO Act, 2012 and the Criminal Law (Amendment) Act, 2013 are not, under any keyword tried. Old Acts are listed by their assent line ("The following Act of Parliament received the assent of the President on the 16th August 1996").
+- **A ministry's copy can be a scan with its own OCR** (POCSO 2012, "PDF24 Tools - OCR"): "(6)" for "(b)", "CHAPTERI", sections 1 and 2 placed in the margin. And a High Court's "AA2012-32.pdf" was India Code's consolidated text, not the Act as enacted.
+- **Amending Acts misquote too.** The POCSO (Amendment) Act, 2019 quotes the words it replaces as "communal or sectarian violance" once and "violence" once; the consolidated text applies both. An exact executor can't, and shouldn't silently.

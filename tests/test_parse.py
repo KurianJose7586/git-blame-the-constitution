@@ -265,3 +265,26 @@ def test_unglue_mends_words_the_text_layer_breaks():
     text = "the costs and the costs, thecosts; th e following, the following, the following; section 7or section 9"
     assert unglue([text]) == [
         "the costs and the costs, the costs; the following, the following, the following; section 7 or section 9"]
+
+
+def test_pocso_rebuilt_back_and_replayed_forward(tmp_path):
+    """T18 on POCSO: India Code's consolidated text parsed, its 2012 text rebuilt backwards from its footnotes,
+    and the POCSO (Amendment) Act, 2019 replayed forwards on that, against the consolidated text. The files that
+    still differ are the known ones (notes/results.md): instruments not to hand (s.1, s.42, s.42A), the Act's own
+    typo "violance" (s.9), and s.4, which the footnotes can't rebuild."""
+    current, amending = ROOT / "sources" / "pocso" / "2012-06-19-pocso-2012.pdf", ROOT / "sources" / "pocso" / "2019-08-05-amendment-act-2019.pdf"
+    if not (current.exists() and amending.exists()):
+        pytest.skip("POCSO's PDFs are not in sources/pocso/ (they aren't committed)")
+    from pdf import gazetted
+    import reconstruct
+    files, provenance, report, trail = constitution.parse(pages(current), act=True)
+    assert report["e1"]["words_match"] == report["e1"]["files"] and not report.get("article_numbers_missing")
+    base = rebuild(files, provenance, trail, {})[0][0]["sections"][0]["files"]
+    for name, law in (("current", files), ("base", base)):
+        for path, text in law.items():
+            (tmp_path / name / path).parent.mkdir(parents=True, exist_ok=True)
+            (tmp_path / name / path).write_text(text, encoding="utf-8")
+    (tmp_path / "act.txt").write_text("\f".join(gazetted(amending)[0]), encoding="utf-8")
+    _, out = reconstruct.replay(tmp_path / "base", [str(tmp_path / "act.txt"), f"={tmp_path / 'current'}"])
+    differ = {p.split("/")[-1] for p in out["checks"][0]["differ"]}
+    assert differ <= {"section-001.md", "section-004.md", "section-009.md", "section-042.md", "section-042a.md"}

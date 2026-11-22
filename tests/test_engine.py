@@ -211,3 +211,17 @@ def test_provisos_inside_explanations():
     ])["part-ii/chapter-ii/section-029a.md"]
     assert "*Explanation I*.—" in got and "    - *Provided that* nothing applies." in got
     assert "scheduled bank" not in got and "asset reconstruction" not in got
+
+
+def test_roman_lists_hold_their_letters():
+    """POCSO (Amendment) Act, 2019, s. 4: "(I) in clause (j),— (A) ... (C) after sub-clause (iii)": (A) to (C) are
+    inside (I), not its siblings; and a quoted block closed mid-line lets "(II)" start the next instruction."""
+    from baseline import baseline
+    ops, misses = baseline('In section 5 of the principal Act,—\n(I) in clause (j),—\n'
+                           '(A) in sub-clause (i), the word "or" occurring at the end shall be omitted;\n'
+                           '(C) after sub-clause (iii), the following sub-clause shall be inserted, namely:—\n'
+                           '"(iv) causes death of the child; or";\n(II) in clause (s), for the words "violence", the '
+                           'words "violence or during any natural calamity" shall be substituted.')
+    assert not misses
+    assert [(o["op"], o["target"]) for o in ops] == [
+        ("OMIT_WORDS", "s.5(j)(i)"), ("INSERT_NODE", "s.5(j)(iii)"), ("SUBSTITUTE_WORDS", "s.5(s)")]

@@ -212,3 +212,22 @@ The replay's own differences, all explained:
 **The 2019 Act, transcribed.** It is a scan. Tesseract reads it but misreads labels ("(6)" for "(b)", "(J)" for "(1)", "(@" for "(i)") and puts margin notes on the wrong lines, because the scan is skewed and the margins overlap the body's x range. So the three pages were read from the page images and typed out, in the extractor's format, into `sources/ibc/2019-08-06-amendment-act-2019.transcribed.txt` (not committed), then compared word for word with Tesseract: they agree except where Tesseract misread a label or dropped a word ("a", "(i)", "(1)"), each checked against the image. All 8 of its provisions apply.
 
 **Held out once more: the 2026 Act.** Read before any rule was written for it, the baseline fully understood **56 of its 71 provisions (79%)**, partly 9, not at all 6, against 38 of 75 (51%) for the 2017 to 2021 Acts before T18's rules. After rules for what it showed (renumbering a clause, omitting several sections or clauses at once, replacing a marginal heading, four sub-sections substituted together, "occurring at both the places"), 64 of 71; 56 of 71 apply in full, with nothing to check them against until IBBI or India Code publishes a consolidation after 2026. What fails: words the Bill's text layer breaks with a space the repair can't decide ("t he", "pro ceeding"), words that occur twice ("period of", "liquidate"), "the long line" and "the opening portion" (no operation for them), a Chapter omitted, and amendments to the 2021 Act's (ca), which wasn't applied.
+
+## 2026-11-23: T18 on POCSO, rebuilt backwards and replayed forwards
+
+**Sources** (`sources/pocso/`, not committed): the Ministry of Women and Child Development's copies of the Act (a scan with someone else's OCR layer, unusable for parsing) and of the POCSO (Amendment) Act, 2019 (a digital Gazette copy); and India Code's consolidated text as of 28 Feb 2023, as hosted by the Jharkhand High Court. Neither the 2012 Act nor the Criminal Law (Amendment) Act, 2013 is in the e-Gazette's index.
+
+**How:** with no clean copy of the Act as enacted, the 2012 text is rebuilt backwards from the consolidated text's footnotes (`engine/rebuild.py`, as for the Constitution), then the 2019 amending Act is replayed forwards on it (`engine/reconstruct.py`) and compared, file by file, with the consolidated text.
+
+| | Count |
+|---|---|
+| Consolidated text parsed: sections, the Schedule | 47, 1; E1 48 / 48, round trip 221 / 221 |
+| Footnotes; change notes understood | 21; 20 / 20 (Act 25 of 2019: 17, Act 34 of 2019: 1, Act 13 of 2013: 1, Act 22 of 2018: 1) |
+| Rebuilt 2012 text: changes undone (words put back / insertions removed / placeholders) | 10 / 5 / 5, none lost |
+| **Independent check:** words of the rebuilt 2012 text found, in order, in the scan's OCR | **7,318 of 7,664 (95.5%)** |
+| **The 2019 Act replayed, held out:** provisions applied in full / partly / failed | **7 / 1 / 2 of 10** |
+| Files matching the consolidated text word for word | **53 of 57** (46 before the replay) |
+
+**Every difference is explained:** s. 1 (the J&K Reorganisation Act's omission), s. 42 and s. 42A (the Criminal Law (Amendment) Acts, 2013 and 2018) are instruments not to hand; s. 9 fails because **the 2019 Act misquotes the text it amends**, "communal or sectarian violance" (its s. 6; its s. 4 spells the same words right, and India Code applies both); s. 4 is a placeholder in the rebuilt text, because its footnotes don't quote the old section, and the Act renumbers it "as section 4(1)", an operation the executor doesn't have.
+
+**Caveats:** the base is silver, rebuilt from the same consolidation the replay is compared with, so agreement shows the amending Act's instructions produce what the footnotes record, not that either matches the 2012 Gazette word for word; the 95.5% against the scan is the only independent check of the base. The baseline needed two more things from this Act: "re-lettered", and Roman numerals "(I)", "(II)" as a list of their own.
