@@ -108,6 +108,8 @@ The Schedules' tables (First, Fourth, and the Sixth's table of tribal areas) com
 | Files, against M0's hand-built repository | 40 and 40, the same paths |
 | E1 words / round trip | 33 / 33, 317 / 317 |
 | Footnotes understood | 16 / 17 (the one: "Omitted by G.S.R. 235(E) dated 27-3-2008", which names no Act) |
-| Files identical to M0's | 33 of 40 |
+| Files identical to M0's | 33 of 40 (35 after the fix below) |
 
 The 7 that differ: 5 where M0 follows the Gazette over DoPT on purpose ("expedient", "suo motu", "(24 of 2019)", "thereunder", Second Schedule entries 8 and 27; see tests/official/rti-act/footnotes.yaml), and **2 slips in M0's published files** that the parser gets right: in s. 17 and s. 20, sub-section (1) isn't a list item (s. 20's reads "(1)Where", as DoPT printed it).
+
+**Fixed later on 22 Nov:** the 2 slips are corrected in `history/rti-act.yaml` and india-law/rti-act is rebuilt. The parser now differs from M0 only in the 5 deliberate places.

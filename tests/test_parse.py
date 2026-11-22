@@ -176,7 +176,7 @@ RTI = ROOT / "sources" / "rti-act-dopt-2025-11-18.txt"  # DoPT's consolidated te
 
 def test_act_mode_on_the_rti_act():
     """The same parser on an Act gives M0's hand-built files, except where M0 departs from DoPT's text on
-    purpose (the Gazette's words, notes in tests/official/rti-act/footnotes.yaml) and two of M0's own slips."""
+    purpose (the Gazette's words, notes in tests/official/rti-act/footnotes.yaml)."""
     if not RTI.exists():
         pytest.skip(f"{RTI.name} is not in sources/ (it isn't committed)")
     import re
@@ -192,5 +192,4 @@ def test_act_mode_on_the_rti_act():
     assert differ == {
         "preamble.md", "chapter-ii/section-004.md", "chapter-iii/section-013.md", "chapter-iv/section-016.md",
         "schedule-2.md",  # M0 follows the Gazette: "expedient", "suo motu", no "(24 of 2019)", "thereunder", entries 8, 27
-        "chapter-iv/section-017.md", "chapter-v/section-020.md",  # M0's slips: its (1) isn't a list item
     }

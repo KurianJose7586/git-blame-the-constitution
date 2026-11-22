@@ -25,6 +25,7 @@ def words(text):
     text = re.sub(r"\s*\*\s*\*\s*\*[\s*]*", "", text)
     text = re.sub(r"^\s*[#-] ", "", text, flags=re.M)
     text = re.sub(r"[*\[\]]", "", text).replace("—", " ")
+    text = re.sub(r"(\(\w+\))(?=\w)", r"\1 ", text)  # a label glued to its first word: "(1)Where"
     return " ".join(text.split())
 
 
