@@ -190,20 +190,18 @@ def ocr(page):
 
 
 def unglue(texts):
-    """Words the text layer runs together ("thecosts", "partyto"), split where the halves stand side by side at
-    least twice elsewhere in the same document and the run-together form appears nowhere else."""
-    found = re.findall(r"[A-Za-z]+", " ".join(texts))
-    once = {w for w, n in Counter(w.lower() for w in found).items() if n == 1}
+    """Words the text layer runs together ("thecosts", "partyto", "Insection"), split where the halves stand side by
+    side elsewhere in the same document at least twice, and at least twice as often as the run-together form."""
+    found = re.findall(r"[A-Za-z]+(?:-[A-Za-z]+)*", " ".join(texts))  # "co-operate" is one word, not "co operate"
+    words = Counter(w.lower() for w in found)
     pairs = Counter(f"{a} {b}".lower() for a, b in zip(found, found[1:]))
 
     def split(m):
         word = m[0]
-        if word.lower() in once:
-            for i in range(2, len(word) - 1):  # two letters a side: not "money s"
-                if pairs[f"{word[:i]} {word[i:]}".lower()] >= 2:
-                    return f"{word[:i]} {word[i:]}"
+        for i in range(2, len(word) - 1):  # two letters a side: not "money s"
+            if pairs[f"{word[:i]} {word[i:]}".lower()] >= max(2, 2 * words[word.lower()]):
+                return f"{word[:i]} {word[i:]}"
         return word
-    words = Counter(w.lower() for w in found)
 
     def join(m):  # the opposite: "th e following", "substitut ed", where the first part is no word of its own
         a, b = m[1], m[2]

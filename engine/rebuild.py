@@ -32,8 +32,12 @@ OMITTED_ARTICLE = re.compile(r"^\W*\[?(\d+)([A-Z]*)\.\s*\[?(.*?)\.?\]?\.?\s*—\
 
 
 def placeholder(note):
+    """Stands in for words no footnote quotes. One that replaced an Explanation or a proviso says so, so an
+    amendment's "for the Explanation" still finds it."""
     section = f", s. {note['section']}" if note.get("section") else ""
-    return f"[before {note['instrument']}{section}: not quoted in the footnote]"
+    kind = re.search(r"\bfor the (Explanation|proviso)\b", note["text"])
+    lead = {"Explanation": "Explanation.—", "proviso": "Provided that "}[kind[1]] if kind else ""
+    return f"{lead}[before {note['instrument']}{section}: not quoted in the footnote]"
 
 
 class Text:

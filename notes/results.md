@@ -231,3 +231,25 @@ The replay's own differences, all explained:
 **Every difference is explained:** s. 1 (the J&K Reorganisation Act's omission), s. 42 and s. 42A (the Criminal Law (Amendment) Acts, 2013 and 2018) are instruments not to hand; s. 9 fails because **the 2019 Act misquotes the text it amends**, "communal or sectarian violance" (its s. 6; its s. 4 spells the same words right, and India Code applies both); s. 4 is a placeholder in the rebuilt text, because its footnotes don't quote the old section, and the Act renumbers it "as section 4(1)", an operation the executor doesn't have.
 
 **Caveats:** the base is silver, rebuilt from the same consolidation the replay is compared with, so agreement shows the amending Act's instructions produce what the footnotes record, not that either matches the 2012 Gazette word for word; the 95.5% against the scan is the only independent check of the base. The baseline needed two more things from this Act: "re-lettered", and Roman numerals "(I)", "(II)" as a list of their own.
+
+## 2026-11-23: T18 on the Arbitration and Conciliation Act
+
+**Sources** (`sources/arbitration/`, not committed), found without the e-Gazette: the Tripura High Court's copy of the Act, which is India Code's consolidated text as amended by the 2015 Act only (every footnote cites Act 3 of 2016); and PRS India's copies of the amending Acts of 2015 (Act 3 of 2016), 2019 (Act 33 of 2019) and 2021 (Act 3 of 2021), the same sizes as the e-Gazette's files.
+
+**How:** as for POCSO: the 1996 text rebuilt backwards from the consolidated text's footnotes, the 2015 Act replayed forwards on it and compared file by file; the 2019 and 2021 Acts replayed after it, with no consolidation to check them against.
+
+| | Count |
+|---|---|
+| Consolidated text parsed: sections, Schedules | 90, 7; E1 97 / 97, round trip 680 / 680; 40 / 40 change notes understood |
+| Rebuilt 1996 text: changes undone (words put back / insertions removed / placeholders) | 6 / 16 / 18, none lost |
+| **The 2015 Act replayed:** provisions applied in full / partly / failed | **20 / 3 / 2 of 25** |
+| Files matching the consolidated text word for word | **102 of 112** (89 before the replay) |
+| **Held out, the 2019 Act** (no rule written for it): provisions fully understood | **14 of 15** |
+| Held out, the 2021 Act | 1 of 3 |
+| The 2019 and 2021 Acts replayed, unchecked: applied / partly / failed | 11 / 1 / 6 of 18 |
+
+**Why the 2015 replay falls short, file by file:** the rebuilt base, not the replay, in most of them. Where a footnote says only "Subs. ..., for clauses (a) and (b)" (s. 37) or "for sub-section (12)" (s. 11), one unlabelled placeholder stands for what was replaced, so a later instruction that names (b) or (12) finds nothing; s. 9's placeholder lands inside its first line, so "Section 9 ... shall be renumbered as sub-section (1)" has no clean paragraph to wrap. And **India Code's footnote misquotes the old words** of s. 11(9), "the Chief Justice of India of India or the person ...", which the rebuilt base inherits, so the 2015 Act's correct quotation can't match (the Constitution's "Unity" again). Checking the base needs the Act as enacted: the e-Gazette's 1996 scan (Gazette ID 48447).
+
+**What the 2019 and 2021 Acts need that the engine hasn't got:** inserting a whole new Part (Part IA, ss. 43A to 43M), so the 2021 Act's substitution of s. 43J has nothing to substitute; omitting a Schedule; "in the long line, for the portion beginning with ... and ending with ...".
+
+New in the engine for this Act: "Section 9 ... shall be renumbered as sub-section (1)" (a RENUMBER of a whole section), "the Explanation to sub-section (2)", a closing double quote typeset as "’’", "(8),the following" with no space, an Explanation of clause (b) found under sub-section (2) where contract 2 nests it, and placeholders that say "Explanation.—" or "Provided that" when the footnote says what they replace. Words the text layer runs together more than once ("Insection", "Providedthat") are split when the separated form is clearly more common; hyphenated words don't count as pairs, so "cooperate" stays whole.

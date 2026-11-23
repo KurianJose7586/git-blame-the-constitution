@@ -505,7 +505,8 @@ def parse(pages, act=False):
                 trail.append((None, f"art.{label}", "\n".join(unit[2])))
                 continue
             report["articles"] += 1
-            path = f"{chapter or part}/{'section' if act else 'article'}-{int(number[1]):03d}{number[2].lower()}.md"
+            folder = f"{chapter or part}/" if chapter or part else ""  # s.1 of an Act can come before any Part
+            path = f"{folder}{'section' if act else 'article'}-{int(number[1]):03d}{number[2].lower()}.md"
             put(path, f"# {heading}", head)
             files[path].append("")
             for text, source in lines:

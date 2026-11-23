@@ -98,11 +98,12 @@ def unlabelled(every, prefix, steps):
     - "in Explanation I ..., the proviso" (s.29A(j)): nothing nests under an Explanation, so its proviso is the
       first one after it, before the text leaves the Explanation's depth.
     """
-    inside = [n for n in every if n[0].startswith(prefix)]
-    for tail in ("".join(steps), steps[-1]):
-        found = [n for n in inside if n[0].endswith(tail)]
-        if len(found) == 1:
-            return found
+    for scope in dict.fromkeys([prefix, re.sub(r"\(\w+\)$", "", prefix)]):  # then the provision around it:
+        inside = [n for n in every if n[0].startswith(scope)]  # clause (b)'s Explanation, nested under (2)
+        for tail in ("".join(steps), steps[-1]):
+            found = [n for n in inside if n[0].endswith(tail)]
+            if len(found) == 1:
+                return found
     if len(steps) == 2 and steps[0].startswith("/explanation") and steps[1].startswith("/proviso"):
         owner = [n for n in inside if n[0].endswith(steps[0])]
         if len(owner) == 1:
@@ -266,6 +267,12 @@ def apply_one(files, op):
         new = [re.match(r"# \S+", lines[0])[0] + " " + " ".join(op["block"].split())]
     elif name == "OMIT_NODE":
         new = []
+    elif name == "RENUMBER" and depth < 0:  # "section 9 ... renumbered as sub-section (1)": its opening words
+        body = [line for line in lines[first:end] if line.strip()]  # become (1), and its list goes under them
+        lead = [line for line in body if not ITEM.match(line)]
+        if len(lead) != 1 or body[0] != lead[0]:
+            raise EditError(f"{name} {target}: needs a section that opens with one paragraph, not a list")
+        new = ["", f"- ({op['label']}) {lead[0].strip()}", *("  " + line for line in body[1:])]
     elif name == "RENUMBER":
         old = LABEL.match(ITEM.match(lines[first])[2]) if depth >= 0 else None
         if not old:

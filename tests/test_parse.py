@@ -288,3 +288,26 @@ def test_pocso_rebuilt_back_and_replayed_forward(tmp_path):
     _, out = reconstruct.replay(tmp_path / "base", [str(tmp_path / "act.txt"), f"={tmp_path / 'current'}"])
     differ = {p.split("/")[-1] for p in out["checks"][0]["differ"]}
     assert differ <= {"section-001.md", "section-004.md", "section-009.md", "section-042.md", "section-042a.md"}
+
+
+def test_arbitration_rebuilt_back_and_replayed_forward(tmp_path):
+    """T18 on the Arbitration and Conciliation Act: India Code's text consolidated to the 2015 amendment, its 1996
+    text rebuilt from its footnotes, and the Amendment Act, 2015 (Act 3 of 2016) replayed on that. Placeholders
+    that stand for whole clauses ("for clauses (a) and (b)") keep it short of every file (notes/results.md)."""
+    folder = ROOT / "sources" / "arbitration"
+    current, amending = folder / "1996-08-16-arbitration-act-1996.pdf", folder / "2016-01-01-amendment-act-2015.pdf"
+    if not (current.exists() and amending.exists()):
+        pytest.skip("the Arbitration Act's PDFs are not in sources/arbitration/ (they aren't committed)")
+    from pdf import gazetted
+    import reconstruct
+    files, provenance, report, trail = constitution.parse(pages(current), act=True)
+    assert report["e1"]["words_match"] == report["e1"]["files"] and "section-001.md" in files
+    base = rebuild(files, provenance, trail, {})[0][0]["sections"][0]["files"]
+    for name, law in (("current", files), ("base", base)):
+        for path, text in law.items():
+            (tmp_path / name / path).parent.mkdir(parents=True, exist_ok=True)
+            (tmp_path / name / path).write_text(text, encoding="utf-8")
+    (tmp_path / "act.txt").write_text("\f".join(gazetted(amending)[0]), encoding="utf-8")
+    _, out = reconstruct.replay(tmp_path / "base", [str(tmp_path / "act.txt"), f"={tmp_path / 'current'}"])
+    outcomes = [a["outcome"] for a in out["amendments"]]
+    assert outcomes.count("applied") >= 20 and out["checks"][0]["files_same"] >= 102

@@ -170,3 +170,8 @@ API Setu's consumer sign-up (Partners portal, "Organization set-up") requires an
 - **POCSO's base text is rebuilt backwards from India Code's footnotes,** because no clean copy of the 2012 Act was found (the ministry's is a badly OCR'd scan; the e-Gazette doesn't index it). Checked against the scan's OCR (95.5% of words in order) and kept silver: a forward replay on it tests the amending Act's instructions, not the base.
 - **India Code's consolidated text is used locally for this test only,** as T18 intended ("compared with India Code's current text"). It came from the Jharkhand High Court's site, not from India Code, and nothing from it is published.
 - **The comparison also takes a folder of law files,** compared file by file, when the consolidation has been parsed already.
+
+## 2026-11-23: The Arbitration Act
+
+- **Sources other than the e-Gazette, when the e-Gazette needs a click:** a High Court's copy of the consolidated text and PRS India's copies of the amending Acts, downloaded at your request ("try to do it on your own"). PRS isn't a government site; its copies are the Legislative Department's PDFs, and their sizes match the e-Gazette's. Kept local.
+- **Rebuilt bases stay silver.** The Arbitration Act's 1996 text, like POCSO's 2012, is rebuilt from footnotes; a forward replay on it tests the amending Act's instructions, and the parts the footnotes don't quote (18 placeholders) can't be tested. The e-Gazette's scan of the 1996 Act would check it.

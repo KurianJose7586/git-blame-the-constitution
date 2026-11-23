@@ -136,3 +136,9 @@ Things noticed along the way: bugs, contradictions, surprises, dead ends. Append
 - **The e-Gazette's index has gaps:** the Arbitration Act, 1996 and its three amending Acts, and the Criminal Law (Amendment) Act, 2018, are there (Gazette IDs 48447, 167377, 210414, 225832; 188472); the POCSO Act, 2012 and the Criminal Law (Amendment) Act, 2013 are not, under any keyword tried. Old Acts are listed by their assent line ("The following Act of Parliament received the assent of the President on the 16th August 1996").
 - **A ministry's copy can be a scan with its own OCR** (POCSO 2012, "PDF24 Tools - OCR"): "(6)" for "(b)", "CHAPTERI", sections 1 and 2 placed in the margin. And a High Court's "AA2012-32.pdf" was India Code's consolidated text, not the Act as enacted.
 - **Amending Acts misquote too.** The POCSO (Amendment) Act, 2019 quotes the words it replaces as "communal or sectarian violance" once and "violence" once; the consolidated text applies both. An exact executor can't, and shouldn't silently.
+
+## 2026-11-23: The Arbitration Act's sources
+
+- **"The Arbitration and Conciliation Act, 1996" on a court's site was India Code's consolidated text again,** and an old one: consolidated to the 2015 amendment, though uploaded in 2021. PRS India's copies of amending Acts match the e-Gazette's file sizes to the kilobyte.
+- **Footnotes misquote, amending Acts misquote:** India Code's note to s. 11(9) has "the Chief Justice of India of India"; the 2015 Act closes a quoted section with "’’" instead of "”".
+- **The Legislative Department's typesetting runs words together at the start of a paragraph** ("Insection 12", "Providedthat") in the 2015 Act's text layer, several times each.
