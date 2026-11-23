@@ -253,3 +253,17 @@ The replay's own differences, all explained:
 **What the 2019 and 2021 Acts need that the engine hasn't got:** inserting a whole new Part (Part IA, ss. 43A to 43M), so the 2021 Act's substitution of s. 43J has nothing to substitute; omitting a Schedule; "in the long line, for the portion beginning with ... and ending with ...".
 
 New in the engine for this Act: "Section 9 ... shall be renumbered as sub-section (1)" (a RENUMBER of a whole section), "the Explanation to sub-section (2)", a closing double quote typeset as "’’", "(8),the following" with no space, an Explanation of clause (b) found under sub-section (2) where contract 2 nests it, and placeholders that say "Explanation.—" or "Provided that" when the footnote says what they replace. Words the text layer runs together more than once ("Insection", "Providedthat") are split when the separated form is clearly more common; hyphenated words don't count as pairs, so "cooperate" stays whole.
+
+## 2026-11-23: The rebuilt bases checked against the Gazette
+
+You downloaded two files from the e-Gazette by hand: the Arbitration and Conciliation Act, 1996 as gazetted (19 Aug 1996, Gazette No. 54, ID 48447; a scan with a text layer) and the Criminal Law (Amendment) Act, 2018 (ID 188472; digital).
+
+| | Count |
+|---|---|
+| **Arbitration:** words of the 1996 text rebuilt from India Code's footnotes, found in order in the 1996 Gazette | 14,919 of 21,812 (68.4%) |
+| … leaving out the Fifth to Seventh Schedules, which the rebuild didn't remove | **14,912 of 15,760 (94.6%)** |
+| POCSO, for comparison: the rebuilt 2012 text against the 2012 scan | 7,318 of 7,664 (95.5%) |
+
+**Why the Fifth to Seventh Schedules are still in the rebuilt 1996 text:** the 2015 Act inserted the Fourth to Seventh Schedules together, and India Code marks them with one bracket from the Fourth Schedule's heading to the end of the Seventh. The parser closes any bracket still open at a Schedule's end (a rule that stopped one note in the Constitution covering 838 lines), so only the Fourth comes out. Without those, the rebuilt base agrees with the Gazette as well as POCSO's does; the remaining 5% is the OCR layer's errors and the 18 placeholders.
+
+**POCSO and the Criminal Law (Amendment) Act, 2018:** its POCSO provision (s. 25, on s. 42) is read correctly, held out, but can't apply: s. 42 was substituted by the Criminal Law (Amendment) Act, 2013 first, and India Code's footnote doesn't quote what it replaced, so the rebuilt 2012 text has a placeholder there. The 2013 Act would fill it. POCSO stays at 53 of 57 files matching.

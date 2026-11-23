@@ -311,3 +311,12 @@ def test_arbitration_rebuilt_back_and_replayed_forward(tmp_path):
     _, out = reconstruct.replay(tmp_path / "base", [str(tmp_path / "act.txt"), f"={tmp_path / 'current'}"])
     outcomes = [a["outcome"] for a in out["amendments"]]
     assert outcomes.count("applied") >= 20 and out["checks"][0]["files_same"] >= 102
+    gazette = folder / "1996-08-19-arbitration-act-1996-gazette.pdf"  # the Act as gazetted: checks the rebuilt base
+    if gazette.exists():
+        import difflib, re
+        kept = {p: t for p, t in base.items() if not re.search(r"schedule-[567]", p)}  # the 2015 Act's (see notes)
+        ours = [w for p in reconstruct.in_order(kept) for w in reconstruct.words(re.sub(r"^#+ |^\s*- |\*", "", kept[p], flags=re.M))]
+        text = "".join(pages(gazette))
+        theirs = reconstruct.words(text[text.find("WHEREAS"):])
+        same = sum(b.size for b in difflib.SequenceMatcher(None, ours, theirs, autojunk=False).get_matching_blocks())
+        assert same / len(ours) > 0.94

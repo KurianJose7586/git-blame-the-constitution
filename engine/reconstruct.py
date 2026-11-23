@@ -6,7 +6,8 @@ official consolidations.
         =out/ibc/consolidated-2018-08-17.txt ...
 
 The first argument is the Act parsed by engine/constitution.py --act, the second a folder for the result. Then, in
-order, amending Acts (text from ingest/pdf.py --gazette) and, prefixed with "=", consolidated texts to compare with
+order, amending Acts (text from ingest/pdf.py --gazette; "act.txt::Name" keeps the provisions naming that Act) and,
+prefixed with "=", consolidated texts (or folders of parsed law files) to compare with
 at that point. Each amending provision goes through the regex baseline and the executor; a consolidated text is
 compared word for word, file by file. The result's files and report.json go in the output folder.
 """
@@ -139,8 +140,11 @@ def replay(base, steps):
                   f"{c['amended_same']} match, {c['amended_old_differences_only']} differ only where the Act as "
                   f"gazetted already did; {len(c['new_differences'])} files have new differences")
             continue
-        act = Path(step).stem
+        step, _, only = step.partition("::")  # "act.txt::Sexual Offences Act": of an Act amending several, the
+        act = Path(step).stem                  # provisions that name this one
         for number, heading, text in provisions(Path(step).read_text(encoding="utf-8")):
+            if only and only not in " ".join(text.split()):
+                continue
             ops, misses = baseline(text)
             touched |= {m[1] for op in ops if (m := FILE_ID.match(op["target"]))}
             touched |= {f"s.{n}" for n in re.findall(r"section (\d+[A-Z]*)", heading)}

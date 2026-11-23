@@ -175,3 +175,8 @@ API Setu's consumer sign-up (Partners portal, "Organization set-up") requires an
 
 - **Sources other than the e-Gazette, when the e-Gazette needs a click:** a High Court's copy of the consolidated text and PRS India's copies of the amending Acts, downloaded at your request ("try to do it on your own"). PRS isn't a government site; its copies are the Legislative Department's PDFs, and their sizes match the e-Gazette's. Kept local.
 - **Rebuilt bases stay silver.** The Arbitration Act's 1996 text, like POCSO's 2012, is rebuilt from footnotes; a forward replay on it tests the amending Act's instructions, and the parts the footnotes don't quote (18 placeholders) can't be tested. The e-Gazette's scan of the 1996 Act would check it.
+
+## 2026-11-23: Hand-downloaded Gazette copies
+
+- **The e-Gazette files you download go in `sources/` under dated names,** with "downloaded by hand" and the Gazette ID in `SOURCES.txt`.
+- **A replay step can take one Act's provisions out of an amending Act that amends several:** `act.txt::Protection of Children from Sexual Offences Act` keeps only the provisions that name it (the Criminal Law (Amendment) Act, 2018 also amends the Penal Code, the Evidence Act and the Code of Criminal Procedure).
