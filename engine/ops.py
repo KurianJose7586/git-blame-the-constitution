@@ -229,10 +229,10 @@ def apply_one(files, op):
             return rest
         if name == "INSERT_NODE" and op["block"].startswith("CHAPTER"):
             return {**files, **chapter_files(op["block"], path)}
-        new_path, text = section_file(op["block"], path)
-        if name == "INSERT_NODE" and new_path in files:
-            raise EditError(f"{name} {target}: {new_path} exists already")
-        return {**rest, new_path: text}
+        new = dict(section_file(s, path) for s in re.split(r"\n(?=\d+(?:-?[A-Z]+)?\.\s?)", op["block"]))  # "42." and "42A."
+        if name == "INSERT_NODE" and new.keys() & files.keys():
+            raise EditError(f"{name} {target}: {', '.join(sorted(new.keys() & files.keys()))} exists already")
+        return {**rest, **new}
     lines = files[path].split("\n")
     if first is None:  # a whole file: everything after the heading
         first = 1 if lines[0].startswith("# ") else 0

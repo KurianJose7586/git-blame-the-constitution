@@ -267,3 +267,43 @@ You downloaded two files from the e-Gazette by hand: the Arbitration and Concili
 **Why the Fifth to Seventh Schedules are still in the rebuilt 1996 text:** the 2015 Act inserted the Fourth to Seventh Schedules together, and India Code marks them with one bracket from the Fourth Schedule's heading to the end of the Seventh. The parser closes any bracket still open at a Schedule's end (a rule that stopped one note in the Constitution covering 838 lines), so only the Fourth comes out. Without those, the rebuilt base agrees with the Gazette as well as POCSO's does; the remaining 5% is the OCR layer's errors and the 18 placeholders.
 
 **POCSO and the Criminal Law (Amendment) Act, 2018:** its POCSO provision (s. 25, on s. 42) is read correctly, held out, but can't apply: s. 42 was substituted by the Criminal Law (Amendment) Act, 2013 first, and India Code's footnote doesn't quote what it replaced, so the rebuilt 2012 text has a placeholder there. The 2013 Act would fill it. POCSO stays at 53 of 57 files matching.
+
+## 2026-11-23 (late): POCSO's s.42, and the Arbitration Act checked to 2021
+
+Two more sources, downloaded on your yes: the Criminal Law (Amendment) Act, 2013 as gazetted (a scan; the Government of India's copy that UNHCR keeps on ecoi.net), and the Arbitration and Conciliation Act consolidated "up to Act No. 3 of 2021" (WIPO Lex's copy of India Code's text; indiacode.nic.in timed out for you, and India Code doesn't list the 2013 Act).
+
+**POCSO, every instrument replayed:** the 2013 Act's s. 29 (s. 42 replaced by ss. 42 and 42A), the 2018 Act's s. 25 (on s. 42), then the 2019 Act.
+
+| | Count |
+|---|---|
+| Amending provisions applied | 10 of 12 (the 2013 and 2018 ones both apply) |
+| Files matching India Code's consolidated text | 53 of 58 |
+
+The five that differ, all explained: s. 1 (the Jammu and Kashmir Reorganisation Act, not to hand); s. 4 (a placeholder the footnotes can't fill); s. 9 (the 2019 Act's own "violance"); **s. 42**, where India Code has "liable to punishment **only** under this Act", a word none of the three Acts has (the 2013 scan read by eye as well as by two OCRs), and prints Arunachal Pradesh's state amendment inside the section; **s. 42A**, where India Code corrects the Gazette's "additon".
+
+**The Arbitration Act, 1996 to 2021:** the rebuilt 1996 text, the 2015 Act, a check against the 2015 consolidation, the 2019 and 2021 Acts, and a check against WIPO's 2021 consolidation.
+
+| | Count |
+|---|---|
+| At 2015: files matching | 104 of 113 (was 102 of 112: ss. 29A and 29B, inserted together, are now two files) |
+| At 2021: files matching | 84 of 116 (73 before any amendment) |
+| … amended files that match, or differ only where the rebuilt 1996 text already did | 26 of 34 |
+| 2019 Act: provisions applied | 10 of 14 (1 partly, 3 failed) |
+| 2021 Act: provisions applied | 0 of 3 |
+
+The first reading (held out, 21–23 Nov) counted the 2019 Act 14 of 15 understood. With a consolidation to check against, 10 apply cleanly, and one of the 14 was wrong: s. 15 ("Amendment to Act 3 of 2016") omits a section of the 2015 amending Act, and the replay had omitted s. 26 of the Arbitration Act itself. It's now skipped, like any amendment of another Act.
+
+The eight files with differences the replay introduced:
+
+| File | Why |
+|---|---|
+| s. 12 | The rebuilt 1996 text has one placeholder for sub-sections (1) and (2) (India Code's note doesn't quote them), and the 2015 Act's "after sub-section (4)" insertion is missed; both already at the 2015 check |
+| s. 17 | The 2019 Act's "in sub-section (1)" isn't found: in the 2015 Act's text layer, s. 17 as substituted begins "(1)A party", so "(1)" isn't read as a label |
+| s. 29A | WIPO's "endeavor" for the Gazette's "endeavour", and a Jammu and Kashmir and Ladakh adaptation printed inside the section |
+| s. 31A | WIPO's copy numbers that page's footnotes so that s. 31A stays in s. 31's file: the consolidation's parse, not the replay |
+| s. 36 | The 2021 Act's proviso, "inserted and shall be deemed to have been inserted with effect from ...", isn't read |
+| s. 37 | WIPO's "takeaway" for "take away" |
+| s. 42A | WIPO's "contained by" and "confidentially" for the 2019 Act's "contained in" and "confidentiality" |
+| s. 87 | The Gazette's margin citations, "(3 of 2016)", which the consolidation leaves out and replaces once with "(23rd October, 2015)" |
+
+What the baseline can't read, from the 2019 and 2021 Acts: "in the long line, for the portion beginning with ... and ending with ..." (s. 11), a new Part (Part IA, so the 2021 Act's s. 43J has nowhere to go), "shall be deemed to have been inserted with effect from", "the Eighth Schedule ... shall be omitted", and a Schedule's reference "[See section 11 (14)]" read as a target in s. 11. These are M2's hard cases (M2.md); they stay out of IndiaAmend-200 because they've been read.

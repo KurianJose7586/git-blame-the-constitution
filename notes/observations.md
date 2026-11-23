@@ -142,3 +142,12 @@ Things noticed along the way: bugs, contradictions, surprises, dead ends. Append
 - **"The Arbitration and Conciliation Act, 1996" on a court's site was India Code's consolidated text again,** and an old one: consolidated to the 2015 amendment, though uploaded in 2021. PRS India's copies of amending Acts match the e-Gazette's file sizes to the kilobyte.
 - **Footnotes misquote, amending Acts misquote:** India Code's note to s. 11(9) has "the Chief Justice of India of India"; the 2015 Act closes a quoted section with "’’" instead of "”".
 - **The Legislative Department's typesetting runs words together at the start of a paragraph** ("Insection 12", "Providedthat") in the 2015 Act's text layer, several times each.
+
+## 2026-11-23 (late): India Code's own words, and other people's copies
+
+- **India Code adds words no Act has.** POCSO s. 42 reads "liable to punishment only under this Act" in India Code; the 2013 Act that substituted it, the 2018 Act and the 2019 Act that amended it don't say "only". The 2013 scan was read by eye to be sure. India Code also prints state amendments inside the section they amend (Arunachal Pradesh's, in s. 42).
+- **The Gazette has typos the consolidations correct:** "additon" (POCSO s. 42A, 2013), as well as "violance" (2019). The amending Act's words win (21 Nov), so the replay keeps them and the difference is listed.
+- **WIPO Lex's copy of India Code's text** has its own slips ("contained by", "confidentially", "takeaway", "endeavor"), writes some footnote markers with a space ("2 [29A."), and includes the 2020 Jammu and Kashmir and Ladakh adaptation orders inside the sections.
+- **An amending Act can amend an earlier amending Act:** the 2019 Arbitration Act's s. 15 is "Amendment to Act 3 of 2016". Read as an amendment of the principal Act, it deleted the wrong s. 26, and nothing failed. A wrong edit that applies cleanly is the case PLAN's verifier is for.
+- **A scan can be JBIG2, which Tesseract can't read**: the 2013 Act's Gazette copy. Poppler's `pdftoppm` renders it, and Tesseract reads the render well, but the page's layout (body to x≈495, margin notes from x≈55 to 110) doesn't fit `--gazette`'s margins, so margin notes land in the body. Only the one section needed was transcribed; a general fix waits for M2's T20, which will meet more scans.
+- **India Code lists Acts as amended, not amending Acts:** "The Criminal Law (Amendment) Act, 2013" returns nothing there, and its old address (indiacode.nic.in) timed out; indiacode.gov.in answers.

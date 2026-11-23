@@ -156,6 +156,9 @@ def test_executor_adds_sections_and_chapters():
     assert got["part-ii/chapter-iii-a/README.md"] == "# CHAPTER III-A\n\nPRE-PACKAGED PROCESS\n"
     assert {"part-ii/chapter-iii-a/section-054a.md", "part-ii/chapter-iii-a/section-054b.md"} <= set(got)
     assert "part-ii/chapter-iii/section-054.md" not in apply(files, [{"op": "OMIT_NODE", "target": "s.54"}])
+    got = apply(files, [{"op": "SUBSTITUTE_NODE", "target": "s.54", "block": "54. Old.—Text.\n54A. New.—More."}])
+    assert got["part-ii/chapter-iii/section-054.md"] == "# 54. Old.\n\nText.\n"  # one section for two (POCSO s.42)
+    assert got["part-ii/chapter-iii/section-054a.md"] == "# 54A. New.\n\nMore.\n"
 
 
 def test_words_that_occur_twice_need_every():

@@ -180,3 +180,9 @@ API Setu's consumer sign-up (Partners portal, "Organization set-up") requires an
 
 - **The e-Gazette files you download go in `sources/` under dated names,** with "downloaded by hand" and the Gazette ID in `SOURCES.txt`.
 - **A replay step can take one Act's provisions out of an amending Act that amends several:** `act.txt::Protection of Children from Sexual Offences Act` keeps only the provisions that name it (the Criminal Law (Amendment) Act, 2018 also amends the Penal Code, the Evidence Act and the Code of Criminal Procedure).
+
+## 2026-11-23 (late): Excerpts, and one section replaced by several
+
+- **An amending Act can be replayed from an excerpt** when only one of its sections touches the law and the rest can't be read cleanly: the enacting formula and that section, transcribed from OCR and checked word by word, with a first line saying so (`sources/pocso/2013-04-02-criminal-law-amendment-act-2013-s29.txt`). The reader takes the first section it finds, not only s. 1.
+- **A section replaced or inserted by several ("the following sections shall be substituted") makes a file each.**
+- **An amendment "to Act N of YYYY" is skipped,** like "of Act N of YYYY": it amends an amending Act, not the law being replayed.

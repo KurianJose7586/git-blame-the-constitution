@@ -285,9 +285,16 @@ def test_pocso_rebuilt_back_and_replayed_forward(tmp_path):
             (tmp_path / name / path).parent.mkdir(parents=True, exist_ok=True)
             (tmp_path / name / path).write_text(text, encoding="utf-8")
     (tmp_path / "act.txt").write_text("\f".join(gazetted(amending)[0]), encoding="utf-8")
-    _, out = reconstruct.replay(tmp_path / "base", [str(tmp_path / "act.txt"), f"={tmp_path / 'current'}"])
+    steps = [str(tmp_path / "act.txt"), f"={tmp_path / 'current'}"]
+    cla13, cla18 = current.parent / "2013-04-02-criminal-law-amendment-act-2013-s29.txt", current.parent / "2018-08-11-criminal-law-amendment-act-2018.pdf"
+    if cla13.exists() and cla18.exists():  # s.42 substituted by two sections in 2013, amended in 2018, then 2019
+        (tmp_path / "cla-2018.txt").write_text("\f".join(gazetted(cla18)[0]), encoding="utf-8")
+        steps = [str(cla13), f"{tmp_path / 'cla-2018.txt'}::Protection of Children from Sexual Offences Act", *steps]
+    _, out = reconstruct.replay(tmp_path / "base", steps)
     differ = {p.split("/")[-1] for p in out["checks"][0]["differ"]}
     assert differ <= {"section-001.md", "section-004.md", "section-009.md", "section-042.md", "section-042a.md"}
+    if len(steps) > 2:  # what's left in s.42 and s.42A is India Code's "only" and its "addition" for "additon"
+        assert all(a["outcome"] == "applied" for a in out["amendments"][:2])
 
 
 def test_arbitration_rebuilt_back_and_replayed_forward(tmp_path):
@@ -310,7 +317,7 @@ def test_arbitration_rebuilt_back_and_replayed_forward(tmp_path):
     (tmp_path / "act.txt").write_text("\f".join(gazetted(amending)[0]), encoding="utf-8")
     _, out = reconstruct.replay(tmp_path / "base", [str(tmp_path / "act.txt"), f"={tmp_path / 'current'}"])
     outcomes = [a["outcome"] for a in out["amendments"]]
-    assert outcomes.count("applied") >= 20 and out["checks"][0]["files_same"] >= 102
+    assert outcomes.count("applied") >= 20 and out["checks"][0]["files_same"] >= 104  # ss. 29A and 29B: two files
     gazette = folder / "1996-08-19-arbitration-act-1996-gazette.pdf"  # the Act as gazetted: checks the rebuilt base
     if gazette.exists():
         import difflib, re

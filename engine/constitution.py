@@ -132,7 +132,7 @@ def strong(k):
         return re.compile(rf"(?<![\w*])\*{{{len(k) - 1}}}(?=\d{{1,2}}\[|[A-Z])")  # "*3[239A.", "of *Puducherry"
     if k[0] == "*":
         return re.compile(rf"(?<!\uf02a)\uf02a{{{len(k)}}}(?!\uf02a)\[?")
-    return re.compile(rf"(?<![\d(]){k}(?:\[|(?=\*|\(\w+\)\s*\*))")
+    return re.compile(rf"(?<![\d(]){k}(?: ?\[|(?=\*|\(\w+\)\s*\*))")  # WIPO's copy of India Code: "2 [29A."
 
 
 def token(m, fid):

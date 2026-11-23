@@ -20,7 +20,7 @@ from pathlib import Path
 from baseline import baseline
 from ops import FILE_ID, EditError, apply_one, file_id
 
-SKIP = re.compile(r"Short title|Repeal and savings|^Ord\.|Validation|of Act \d+ of \d{4}")
+SKIP = re.compile(r"Short title|Repeal and savings|^Ord\.|Validation|(?:of|to) Act \d+ of \d{4}")  # "Amendment to Act 3 of 2016"
 LABEL = r"\((?:\d+[A-Z]*|[a-z]{1,6}|[A-Z]|[IVX]{2,5})\)\s"  # "(2A)", "(ii)", "(B)", "(II)"
 
 
@@ -32,7 +32,7 @@ def provisions(text):
     out = []
     for line in text[text.lower().find("be it enacted"):].split("\n")[1:]:
         m = re.match(r"^(\d+)\.\s+(.*?)—(.*)$", line)
-        if m and int(m[1]) == (int(out[-1][0]) + 1 if out else 1):
+        if m and (not out or int(m[1]) == int(out[-1][0]) + 1):  # the first need not be 1: an Act's excerpt
             out.append([m[1], m[2], [m[3]]])
         elif out:
             out[-1][2].append(line)
