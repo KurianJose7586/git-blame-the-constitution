@@ -307,3 +307,32 @@ The eight files with differences the replay introduced:
 | s. 87 | The Gazette's margin citations, "(3 of 2016)", which the consolidation leaves out and replaces once with "(23rd October, 2015)" |
 
 What the baseline can't read, from the 2019 and 2021 Acts: "in the long line, for the portion beginning with ... and ending with ..." (s. 11), a new Part (Part IA, so the 2021 Act's s. 43J has nowhere to go), "shall be deemed to have been inserted with effect from", "the Eighth Schedule ... shall be omitted", and a Schedule's reference "[See section 11 (14)]" read as a target in s. 11. These are M2's hard cases (M2.md); they stay out of IndiaAmend-200 because they've been read.
+
+## 2026-11-23 (night): T19, the task format, and the silver examples
+
+**The format** (`model/examples.py`, M2.md decision 2). Input: the amending provision's heading and text, then `---`, then the law it can touch: every file the provision names outside its quotations, line by line, each line after the ID a target would use (`s.30(2)(a)`, `s.29A(c)/proviso2`), and the headings of the files either side. Output: the operations as JSON, each target rewritten to the ID the law shows (`s.18/explanation` becomes `s.18(1)(g)/explanation`). Each example also lists its targets, the enum constrained decoding would allow. `model/build-silver.sh` builds all three laws from their checked replays.
+
+| Law | Amending provisions | All operations applied | Silver | … every target in the law shown | … round-trip |
+|---|---|---|---|---|---|
+| IBC, 2016 to 2021 | 83 | 80 | 46 | 46 | 46 |
+| Arbitration, 1996 to 2021 | 41 | 34 | 21 | 21 | 21 |
+| POCSO, 2012 to 2019 | 12 | 10 | 7 | 7 | 7 |
+| **Total** | 136 | 124 | **74** | **74** | **74** |
+
+Silver means the files a provision changed are still there at the next consolidation and have no difference there that the base text didn't already have. That is strict: IBBI's own rewordings ("an" to "any", a dropped Act number) count against the IBC's provisions, which is why 46 of its 80 are silver. Round-trip means the output, parsed back and applied to the law before, gives the law the replay made. **T19's "done when" holds: every silver example round-trips.**
+
+Inputs: median 2,044 characters, 90% under 5,042, one over 16,000 (26,746: an IBC provision naming several long sections). Operations: 30 SUBSTITUTE_WORDS, 29 INSERT_NODE, 19 SUBSTITUTE_NODE, 9 INSERT_WORDS, 7 ADD_AT_END, 5 OMIT_WORDS, 2 OMIT_NODE, 1 RENUMBER.
+
+**What M1 found missing, now in the schema, the executor and the baseline:** inserting a Part (as a Chapter is inserted: a folder beside the Part its first section follows); inserting, substituting and omitting a whole Schedule, several in one block ("the following new Schedules"); "the portion beginning with ... and ending with ..." (a `to` field on word operations, within one line, so "in the long line" needs nothing more); label ranges ("sub-sections (11) to (14)"); a block opened with a double quote typeset as two single ones ("‘‘"). Not added, because no Act read so far has them: "the opening portion", and omitting a Chapter.
+
+**The Arbitration Act to 2021, again** (these numbers replace those above). The comparison with parsed law files had summarised each file by its first 80 characters, so a wrong edit further into a file that already differed went unseen; it now lists the differences word by word, as the comparison with a text always did. That showed two wrong edits that had applied cleanly: the 2019 Act's Eighth Schedule appended to the Seventh's file, and the 2015 Act's Fourth to Seventh Schedules appended to the Third's.
+
+| | Count |
+|---|---|
+| At 2015: files matching | 106 of 113 |
+| 2015 Act: provisions applied | 19 of 24 (s.25's four Schedules now fail: the rebuilt 1996 base already has the Fifth to Seventh, the bracket problem of 23 Nov) |
+| 2019 Act: provisions applied | 12 of 14 (s.11's: India Code's misquote in s.11(9) and sub-sections the 2015 replay left out; s.16, because there's no Fourth Schedule to amend) |
+| 2021 Act: provisions applied | 3 of 3 |
+| At 2021: files matching | 88 of 130 |
+
+The 22 files with new differences at 2021: **ss. 2 and 11**, the 2019 Act's ss. 2 and 3, which aren't in force (WIPO's copy cites only its ss. 4 to 13, and Part IA from 12 Oct 2023), and the 2015 replay's gaps in s.11; **Part IA, ss. 43A to 43M** (13 files), WIPO's text layer drops the dash after most headings, so its parse runs sections together; **s.12**, the base's placeholder; **ss. 29A and 34**, Jammu and Kashmir and Ladakh adaptations printed inside the sections, and "endeavor"; **s.31**, India Code keeps the old Explanation to s.31(8), which explains a clause (a) the 2015 substitution of (8) removed; **s.31A**, WIPO's footnote numbering; **s.36**, a word broken at a line end in the 2015 Act's text ("enforce ment"); **s.42A**, WIPO's "contained by" and "confidentially"; **s.87**, the Gazette's margin citations.

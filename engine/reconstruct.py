@@ -20,7 +20,8 @@ from pathlib import Path
 from baseline import baseline
 from ops import FILE_ID, EditError, apply_one, file_id
 
-SKIP = re.compile(r"Short title|Repeal and savings|^Ord\.|Validation|(?:of|to) Act \d+ of \d{4}")  # "Amendment to Act 3 of 2016"
+SKIP = re.compile(r"Short title|Repeal and savings|^Ord\.|Validation|(?:of|to) Act \d+ of \d{4}"  # "Amendment to Act 3 of 2016"
+                  r"|Act not to apply")  # the 2015 Act's s.26, a saving of its own: it amends nothing
 LABEL = r"\((?:\d+[A-Z]*|[a-z]{1,6}|[A-Z]|[IVX]{2,5})\)\s"  # "(2A)", "(ii)", "(B)", "(II)"
 
 
@@ -40,13 +41,15 @@ def provisions(text):
     for number, heading, lines in out:
         joined = " ".join(" ".join(lines).split())
         joined = re.sub(r"(?<=[;:—] )(\(\w{1,5}\))(?=[a-z])", r"\1 ", joined)  # "; (e)in clause (t)": a label glued on
+        joined = re.sub(r"(?<=[—\s])(\(\d+\))(?=[A-Z])", r"\1 ", joined)  # "tribunal.—(1)A party" (the 2015 Act)
+        joined = re.sub(r"\bProvided(?=(?:that|further|also)\b)", "Provided ", joined)  # "Providedfurther that"
         if SKIP.search(heading) or re.search(r"hereby repealed|such repeal", joined):
             continue
         # A label starts a line after "—", ":", ";", ".", "; and" or "; or", not after a comma: "sub-sections (6),
         # (6A)"; so do a proviso and an Explanation, and a quoted block after "namely:—".
         joined = re.sub(rf"(?<=[—:;.])\s+(?={LABEL})|(?:(?<=; and)|(?<=; or))\s+(?={LABEL})", "\n", joined)
         joined = re.sub(r"(?<=[—:;.])\s*(?=(?:Provided|Explanation)\b)", "\n", joined)
-        joined = re.sub(r"(?<=—)\s*(?=[“\"'‘])", "\n", joined)
+        joined = re.sub(r"(?<=—)\s*(?=[“\"'‘])|(?<=namely:)\s+(?=[“\"'‘])", "\n", joined)  # 2021: "namely: “Provided"
         joined = re.sub(r"(?<=[.;:—”\"'’])\s+(?=\d+-?[A-Z]+\.\s*[A-Z(])", "\n", joined)  # a new section inside a new Chapter
         kept.append((number, heading, joined))
     return kept
@@ -94,12 +97,13 @@ def consolidated(path):
 def compare(files, path):
     """Which law files' words appear, in order and with nothing missing or added, in the consolidated text. Words
     the consolidated text has between two files count against the file before."""
-    if Path(path).is_dir():  # law files already parsed from a consolidation: compared file by file
-        theirs = load(path)
-        differ = {p: [f"{' '.join(words(files.get(p, '')))[:80]!r} -> {' '.join(words(theirs.get(p, '')))[:80]!r}"]
-                  for p in set(files) | set(theirs)
-                  if words(re.sub(r"^#+ |^\s*- |\*", "", files.get(p, ""), flags=re.M))
-                  != words(re.sub(r"^#+ |^\s*- |\*", "", theirs.get(p, ""), flags=re.M))}
+    if Path(path).is_dir():  # law files already parsed from a consolidation: compared file by file, word by word
+        theirs, differ = load(path), {}
+        for p in set(files) | set(theirs):
+            a, b = (words(re.sub(r"^#+ |^\s*- |\*", "", law.get(p, ""), flags=re.M)) for law in (files, theirs))
+            for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
+                if tag != "equal":
+                    differ.setdefault(p, []).append(f"{' '.join(a[i1:i2])[:80]!r} -> {' '.join(b[j1:j2])[:80]!r}")
         return {"files": len(files), "files_same": len(set(files) - set(differ)), "differ": differ}
     ours, owner = [], []
     for p in in_order(files):
@@ -128,7 +132,9 @@ def check(start, files, touched, path):
             "new_differences": new, "differ": after["differ"]}
 
 
-def replay(base, steps):
+def replay(base, steps, kept=None):
+    """The law after each step, and a report; `kept`, a list, gets each provision with the law before and after it
+    (model/examples.py)."""
     start = load(base)
     files, report, touched = dict(start), {"amendments": [], "checks": []}, set()
     for step in steps:
@@ -148,7 +154,7 @@ def replay(base, steps):
             ops, misses = baseline(text)
             touched |= {m[1] for op in ops if (m := FILE_ID.match(op["target"]))}
             touched |= {f"s.{n}" for n in re.findall(r"section (\d+[A-Z]*)", heading)}
-            errors = []
+            errors, before = [], files
             for op in ops:
                 try:
                     files = apply_one(files, op)
@@ -157,6 +163,9 @@ def replay(base, steps):
             outcome = "applied" if ops and not misses and not errors else "partly" if ops and len(errors) < len(ops) else "failed"
             report["amendments"].append({"act": act, "section": number, "heading": heading, "ops": len(ops),
                                          "misses": misses, "errors": errors, "outcome": outcome})
+            if kept is not None:
+                kept.append({**report["amendments"][-1], "text": text, "ops": ops, "before": before, "after": files,
+                             "check": len(report["checks"])})  # the next check's index
             print(f"  {act} s.{number:<3} {outcome:<8} {len(ops)} ops, {len(misses)} missed, {len(errors)} failed  {heading[:50]}")
     return files, report
 

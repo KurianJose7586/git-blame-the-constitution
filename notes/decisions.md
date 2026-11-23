@@ -186,3 +186,11 @@ API Setu's consumer sign-up (Partners portal, "Organization set-up") requires an
 - **An amending Act can be replayed from an excerpt** when only one of its sections touches the law and the rest can't be read cleanly: the enacting formula and that section, transcribed from OCR and checked word by word, with a first line saying so (`sources/pocso/2013-04-02-criminal-law-amendment-act-2013-s29.txt`). The reader takes the first section it finds, not only s. 1.
 - **A section replaced or inserted by several ("the following sections shall be substituted") makes a file each.**
 - **An amendment "to Act N of YYYY" is skipped,** like "of Act N of YYYY": it amends an amending Act, not the law being replayed.
+
+## 2026-11-23 (night): T19's format
+
+- **Targets in the model's output are the IDs the input shows,** found by the executor and rewritten (`s.18/explanation` is shown, and written, as `s.18(1)(g)/explanation`). Every target is then in the example's list of targets, which is the enum for constrained decoding, with one exception: an operation can name what an earlier one in the same output made ("clause (a) shall be re-lettered as clause (ab) ... and before clause (ab) ..."). T26's decoder has to allow those.
+- **The law shown is what the provision names outside its quotations, in full, and the neighbours' headings only.** "section 7 or 9" inside a quotation names nothing.
+- **Silver needs the changed files to be there at the next consolidation:** a Schedule inserted in 2019 and omitted in 2021 was checked by nothing.
+- **Comparisons with parsed law files are word by word,** like comparisons with text.
+- **"The opening portion" and omitting a Chapter wait for an Act that has them** (M2.md listed them for T19).

@@ -6,11 +6,11 @@
   "items": {
     "oneOf": [
       {"type": "object", "additionalProperties": false, "required": ["op", "target", "old", "new"],
-       "properties": {"op": {"const": "SUBSTITUTE_WORDS"}, "target": {"$ref": "#/$defs/target"}, "old": {"type": "string", "minLength": 1}, "new": {"type": "string"}, "every": {"$ref": "#/$defs/every"}, "last": {"$ref": "#/$defs/last"}}},
+       "properties": {"op": {"const": "SUBSTITUTE_WORDS"}, "target": {"$ref": "#/$defs/target"}, "old": {"type": "string", "minLength": 1}, "to": {"$ref": "#/$defs/to"}, "new": {"type": "string"}, "every": {"$ref": "#/$defs/every"}, "last": {"$ref": "#/$defs/last"}}},
       {"type": "object", "additionalProperties": false, "required": ["op", "target", "position", "anchor", "text"],
        "properties": {"op": {"const": "INSERT_WORDS"}, "target": {"$ref": "#/$defs/target"}, "position": {"enum": ["after", "before"]}, "anchor": {"type": "string", "minLength": 1}, "text": {"type": "string", "minLength": 1}, "every": {"$ref": "#/$defs/every"}, "last": {"$ref": "#/$defs/last"}}},
       {"type": "object", "additionalProperties": false, "required": ["op", "target", "text"],
-       "properties": {"op": {"const": "OMIT_WORDS"}, "target": {"$ref": "#/$defs/target"}, "text": {"type": "string", "minLength": 1}, "every": {"$ref": "#/$defs/every"}, "last": {"$ref": "#/$defs/last"}}},
+       "properties": {"op": {"const": "OMIT_WORDS"}, "target": {"$ref": "#/$defs/target"}, "text": {"type": "string", "minLength": 1}, "to": {"$ref": "#/$defs/to"}, "every": {"$ref": "#/$defs/every"}, "last": {"$ref": "#/$defs/last"}}},
       {"type": "object", "additionalProperties": false, "required": ["op", "target", "block"],
        "properties": {"op": {"const": "SUBSTITUTE_NODE"}, "target": {"$ref": "#/$defs/target"}, "block": {"$ref": "#/$defs/block"}}},
       {"type": "object", "additionalProperties": false, "required": ["op", "target", "position", "block"],
@@ -26,6 +26,7 @@
   "$defs": {
     "target": {"type": "string", "pattern": "^(preamble|art\\.\\d+[A-Z]*|s\\.\\d+[A-Z]*|sch\\.\\d+)((\\([0-9A-Za-z]+\\))|(/(proviso|explanation|para)\\d*))*(/heading)?$"},
     "last": {"type": "boolean", "description": "The last occurrence only: \"occurring at the end\""},
+    "to": {"type": "string", "minLength": 1, "description": "The portion's last words: \"the portion beginning with 'old' and ending with 'to'\", within one line"},
     "every": {"type": "boolean", "description": "Every occurrence: \"at both the places\", \"wherever they occur\". Without it the words must occur once in the target"},
     "block": {"type": "string", "minLength": 1, "description": "The inserted provisions as the amending text gives them, one provision per line"}
   }

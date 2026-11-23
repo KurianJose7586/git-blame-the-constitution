@@ -193,15 +193,33 @@ def section_file(block, beside):
     return path, "\n".join([f"# {' '.join(flat(head).split())}", "", *(text for text, _ in lines)]) + "\n"
 
 
-def chapter_files(block, beside):
-    """{path: text} of a Chapter an amendment inserts: its README and its sections, in a folder beside the folder of
-    the section it follows ("CHAPTER III-A" after s.54 in part-ii/chapter-iii: part-ii/chapter-iii-a)."""
-    m = re.match(r"CHAPTER\s+([IVXL]+(?:-?[A-Z])?)\s+(.*?)\s*\n?(?=\d+(?:-?[A-Z]+)?\.\s?)", block, re.S)
+ORDINALS = "first second third fourth fifth sixth seventh eighth ninth tenth eleventh twelfth".split()
+
+
+def schedule_file(block, beside):
+    """(path, text) of a Schedule an amendment inserts or substitutes ("THE EIGHTH SCHEDULE (See section 43J) ...")."""
+    from constitution import schedule  # here, not at the top: constitution imports this module
+    m = re.match(rf"\W*((?:THE\s+)?({'|'.join(ORDINALS)})\s+SCHEDULE)\b\s*", block, re.I)
     if not m:
-        raise EditError(f"a new Chapter needs its number, title and sections: {block[:60]!r}")
-    number = re.sub(r"-?([a-z])$", r"-\1", m[1].lower())  # "III-A" and "IIIA" are both chapter-iii-a
-    folder = f"{PurePosixPath(beside).parent.parent}/chapter-{number}".lstrip("./")
-    out = {f"{folder}/README.md": f"# CHAPTER {m[1]}\n\n{' '.join(m[2].split())}\n"}
+        raise EditError(f"a new Schedule needs its number, \"THE EIGHTH SCHEDULE\": {block[:60]!r}")
+    lines, _ = schedule(block[m.end():].split("\n"))
+    path = f"{PurePosixPath(beside).parent}/schedule-{ORDINALS.index(m[2].lower()) + 1}.md".lstrip("./")
+    return path, "\n".join([f"# {' '.join(m[1].split())}", *(text for text, _ in lines)]) + "\n"
+
+
+def chapter_files(block, beside):
+    """{path: text} of a Chapter or Part an amendment inserts: its README and its sections, in a folder beside the
+    Chapter's or Part's the section it follows is in ("CHAPTER III-A" after s.54 in part-ii/chapter-iii:
+    part-ii/chapter-iii-a; "PART IA" after s.43 in part-i/chapter-x: part-ia)."""
+    m = re.match(r"(CHAPTER|PART)\s+([IVXL]+(?:-?[A-Z])?)\s+(.*?)\s*\n?(?=\d+(?:-?[A-Z]+)?\.\s?)", block, re.S)
+    if not m:
+        raise EditError(f"a new Chapter or Part needs its number, title and sections: {block[:60]!r}")
+    kind, number = m[1].lower(), m[2].lower()
+    if kind == "chapter":  # "III-A" and "IIIA" are both chapter-iii-a, as the IBC prints them; "PART IA" is part-ia
+        number = re.sub(r"-?([a-z])$", r"-\1", number)
+    at = next((p for p in PurePosixPath(beside).parents if p.name.startswith(f"{kind}-")), PurePosixPath(beside))
+    folder = f"{at.parent}/{kind}-{number}".lstrip("./")
+    out = {f"{folder}/README.md": f"# {m[1]} {m[2]}\n\n{' '.join(m[3].split())}\n"}
     for section in re.split(r"\n(?=\d+(?:-?[A-Z]+)?\.\s?)", block[m.end():]):
         path, text = section_file(section, f"{folder}/README.md")
         out[path] = text
@@ -218,18 +236,21 @@ def apply(files, ops):
 
 def apply_one(files, op):
     name = op.get("op")
-    if name not in OPS or set(op) - ({"every", "last"} if name.endswith("_WORDS") else set()) != {"op", *OPS[name]}:
+    if name not in OPS or set(op) - ({"every", "last", "to"} if name.endswith("_WORDS") else set()) != {"op", *OPS[name]}:
         raise EditError(f"{op}: expected {name} with fields {OPS.get(name)}")
     target = op["target"]
     path, first, end, depth = find(files, target)
     if first is None and name in ("INSERT_NODE", "SUBSTITUTE_NODE", "OMIT_NODE") and path.rsplit("/", 1)[-1].startswith(
-            "section-"):  # a whole section is a file: added beside the one named, or replaced, or deleted
+            ("section-", "schedule-")):  # a whole section or Schedule is a file: added beside, replaced or deleted
         rest = {p: t for p, t in files.items() if p != path or name == "INSERT_NODE"}
         if name == "OMIT_NODE":
             return rest
-        if name == "INSERT_NODE" and op["block"].startswith("CHAPTER"):
+        if name == "INSERT_NODE" and op["block"].startswith(("CHAPTER", "PART")):
             return {**files, **chapter_files(op["block"], path)}
-        new = dict(section_file(s, path) for s in re.split(r"\n(?=\d+(?:-?[A-Z]+)?\.\s?)", op["block"]))  # "42." and "42A."
+        new = (dict(schedule_file(s, path) for s in re.split(  # the 2015 Act's Fourth to Seventh, one block
+                   rf"(?<!THE)\s(?=\W*(?:THE\s+)?(?:{'|'.join(map(str.upper, ORDINALS))})\s+SCHEDULE\b)", op["block"]))
+               if path.rsplit("/", 1)[-1].startswith("schedule-") else
+               dict(section_file(s, path) for s in re.split(r"\n(?=\d+(?:-?[A-Z]+)?\.\s?)", op["block"])))  # 42, 42A
         if name == "INSERT_NODE" and new.keys() & files.keys():
             raise EditError(f"{name} {target}: {', '.join(sorted(new.keys() & files.keys()))} exists already")
         return {**rest, **new}
@@ -248,7 +269,8 @@ def apply_one(files, op):
 
     if name in ("SUBSTITUTE_WORDS", "OMIT_WORDS", "INSERT_WORDS"):
         needle = op["old"] if name == "SUBSTITUTE_WORDS" else op["anchor"] if name == "INSERT_WORDS" else op["text"]
-        words = re.compile(rf"(?<!\w){re.escape(needle)}(?!\w)")  # whole words: "payment" isn't in "repayment"
+        to = rf"[^\n]*?{re.escape(op['to'])}" if op.get("to") else ""  # "the portion beginning with ... and ending with"
+        words = re.compile(rf"(?<!\w){re.escape(needle)}{to}(?!\w)")  # whole words: "payment" isn't in "repayment"
         hits = list(words.finditer(region))
         if not hits:
             raise EditError(f"{name} {target}: {needle!r} not found{nearest(needle, region)}")

@@ -45,8 +45,16 @@ RULES = [  # (op, pattern); word rules quote inline, node rules take the block t
     ("OMIT_NODE", rf"(?:^|,\s*)(?:\(\w+\)\s+)?{NODE}\s+shall be omitted"),
     ("ADD_AT_END", r"\bthe following\b.*?shall be (?:added|inserted)"),  # with no "after" or "before": at the end
 ]
-CHAPTER = re.compile(r"\bafter\s+Chapter\s+[IVXL]+[A-Z-]*" + OF_ACT + r",?\s+the following Chapter shall be inserted", re.I)
-LABELS = r"\(\w+\)(?:,?\s*(?:and\s+)?\(\w+\))+"  # "(7) and (8)", "(3), (4), (5) and (6)"
+CHAPTER = re.compile(r"\bafter\s+(?:Chapter|Part)\s+[IVXL]+[A-Z-]*" + OF_ACT + r",?\s+the following (?:Chapter|Part) shall be "
+                     r"inserted", re.I)
+SCHEDULE = re.compile(rf"\b(?:(?P<position>after|before)|for)\s+the\s+(?P<nth>{'|'.join(ORDINALS)})\s+Schedule\b"
+                      r"(?:\s+to\s+the\s+principal\s+Act)?,?\s+the following (?:new\s+)?Schedules?\s+shall\s+be\s+"
+                      r"(?:inserted|substituted)", re.I)
+SCHEDULE_OMITTED = re.compile(rf"\bthe\s+(?P<nth>{'|'.join(ORDINALS)})\s+Schedule\b(?:\s+to\s+the\s+principal\s+Act)?\s+"
+                              r"shall\s+be\s+omitted", re.I)
+PORTION = re.compile(rf"\bfor the portion beginning with\s+{Q}+(?P<old>.+?){Q}+\s+and ending with\s+{Q}+(?P<to>.+?){Q}+,?\s+"
+                     r"the following shall be substituted", re.I)
+LABELS = r"\(\w+\)(?:,?\s*(?:and\s+|to\s+)?\(\w+\))+"  # "(7) and (8)", "(3), (4), (5) and (6)", "(11) to (14)"
 PAIR = re.compile(rf"\bfor\s+(?:sub-sections|clauses|sub-clauses)\s+(?P<labels>{LABELS}),?\s*the following\b.*?"
                   r"shall be substituted", re.I)
 OMIT_MANY = re.compile(rf"\b(?:(?P<kind>sub-sections|clauses|sub-clauses)\s+(?P<labels>{LABELS})"
@@ -68,8 +76,9 @@ def split(text):
     for line in (l.strip() for l in text.split("\n")):
         if not line:
             continue
-        if block is None and re.match(Q, line) and items:  # a quoted block opens
-            block, end = [line[1:]], re.compile(rf"{CLOSE[line[0]]}\s*[.;,]?(\s*and)?\s*$")
+        if block is None and re.match(Q, line) and items:  # a quoted block opens; "‘‘" is a double quote typeset as two
+            two = line.startswith(("‘‘", "''"))
+            block, end = [line[1 + two:]], re.compile(rf"{DOUBLE if two else CLOSE[line[0]]}\s*[.;,]?(\s*and)?\s*$")
         elif block is not None:
             block.append(line)
         else:
@@ -92,6 +101,14 @@ def suffix(g):
     return f"({g.get('label') or g['bare']})"
 
 
+def labels(text):
+    """The labels a list names: "(3), (4) and (6)"; "(11) to (14)" is every number between."""
+    found = re.findall(r"\((\w+)\)", text)
+    if (m := re.fullmatch(r"\((\d+)\)\s+to\s+\((\d+)\)", text.strip())):
+        return [str(n) for n in range(int(m[1]), int(m[2]) + 1)]
+    return found
+
+
 def list_kind(line):
     """The kind of the label an instruction starts with, "(a) in sub-section (1),—": siblings share a kind."""
     m = re.match(r"\((\w+)\)\s", line)
@@ -107,8 +124,9 @@ def list_kind(line):
 def baseline(text):
     ops, misses, file, context = [], [], None, []  # context: [(list kind, location)] of the lines above
     for line, block in split(text):
+        bare = re.sub(r"[“\"][^”\"]*[”\"]|‘‘.*?’’", "", line)  # not "[See section 11 (14)]" in the Fourth Schedule
         for pattern, make in FILE:
-            if not file and (m := re.search(pattern, line)):
+            if not file and (m := re.search(pattern, bare)):
                 file = make(m)
         kind = list_kind(line)
         if kind:  # a sibling replaces the context of the one before it
@@ -120,15 +138,27 @@ def baseline(text):
         if block is not None and CHAPTER.search(line) and (m := re.search(r"(\d+)[A-Z]+\.\s", block)):
             ops.append({"op": "INSERT_NODE", "target": f"s.{m[1]}", "position": "after", "block": block})
             continue  # a new Chapter goes after the section its first section follows: 54A after s.54
+        if block is not None and (m := SCHEDULE.search(line)):  # a whole Schedule: a file of its own
+            target = f"sch.{ORDINALS.index(m['nth'].lower()) + 1}"
+            ops.append({"op": "INSERT_NODE", "target": target, "position": m["position"].lower(), "block": block}
+                       if m["position"] else {"op": "SUBSTITUTE_NODE", "target": target, "block": block})
+            continue
+        if m := SCHEDULE_OMITTED.search(unquoted):
+            ops.append({"op": "OMIT_NODE", "target": f"sch.{ORDINALS.index(m['nth'].lower()) + 1}"})
+            continue
+        if block is not None and (m := PORTION.search(line)):  # "in the long line, for the portion beginning with"
+            ops.append({"op": "SUBSTITUTE_WORDS", "target": where, "old": m["old"].strip(), "to": m["to"].strip(),
+                        "new": " ".join(block.split())})
+            continue
         if block is not None and (m := PAIR.search(line)):  # "for sub-sections (7) and (8)": all but the first go,
-            first, *rest = re.findall(r"\((\w+)\)", m["labels"])  # and the first takes the whole block
+            first, *rest = labels(m["labels"])  # and the first takes the whole block
             ops += [{"op": "OMIT_NODE", "target": f"{where}({label})"} for label in reversed(rest)]
             ops.append({"op": "SUBSTITUTE_NODE", "target": f"{where}({first})", "block": block})
             continue
         if m := OMIT_MANY.search(unquoted):  # "sections 38, 39, 40, 41 and 42 ... shall be omitted"
             ops += ([{"op": "OMIT_NODE", "target": f"s.{n}"} for n in re.findall(r"\d+[A-Z]*", m["numbers"])]
                     if m["numbers"] else
-                    [{"op": "OMIT_NODE", "target": f"{where}({label})"} for label in re.findall(r"\((\w+)\)", m["labels"])])
+                    [{"op": "OMIT_NODE", "target": f"{where}({label})"} for label in labels(m["labels"])])
             continue
         if (m := HEADING.search(line)) and (m["new"] or block):  # a new marginal heading
             ops.append({"op": "SUBSTITUTE_NODE", "target": f"{file}/heading", "block": m["new"] or block})

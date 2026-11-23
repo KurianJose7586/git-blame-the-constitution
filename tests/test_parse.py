@@ -317,7 +317,8 @@ def test_arbitration_rebuilt_back_and_replayed_forward(tmp_path):
     (tmp_path / "act.txt").write_text("\f".join(gazetted(amending)[0]), encoding="utf-8")
     _, out = reconstruct.replay(tmp_path / "base", [str(tmp_path / "act.txt"), f"={tmp_path / 'current'}"])
     outcomes = [a["outcome"] for a in out["amendments"]]
-    assert outcomes.count("applied") >= 20 and out["checks"][0]["files_same"] >= 104  # ss. 29A and 29B: two files
+    # s.25's four new Schedules fail: the rebuilt base already has the Fifth to Seventh (notes/results.md)
+    assert outcomes.count("applied") >= 19 and out["checks"][0]["files_same"] >= 106
     gazette = folder / "1996-08-19-arbitration-act-1996-gazette.pdf"  # the Act as gazetted: checks the rebuilt base
     if gazette.exists():
         import difflib, re

@@ -159,6 +159,67 @@ def test_executor_adds_sections_and_chapters():
     got = apply(files, [{"op": "SUBSTITUTE_NODE", "target": "s.54", "block": "54. Old.—Text.\n54A. New.—More."}])
     assert got["part-ii/chapter-iii/section-054.md"] == "# 54. Old.\n\nText.\n"  # one section for two (POCSO s.42)
     assert got["part-ii/chapter-iii/section-054a.md"] == "# 54A. New.\n\nMore.\n"
+    got = apply(files, [{"op": "INSERT_NODE", "target": "s.54", "position": "after", "block":  # Arbitration 2019
+                         "PART IIA COUNCIL\n54A. Definitions.—Text.\n54B. Council.—More."}])
+    assert got["part-iia/README.md"] == "# PART IIA\n\nCOUNCIL\n" and "part-iia/section-054b.md" in got
+
+
+def test_executor_adds_and_omits_schedules_and_portions():
+    files = {"schedule-7.md": "# THE SEVENTH SCHEDULE\n\nText.\n", "section-011.md": SECTION_11}
+    block = "‘THE EIGHTH SCHEDULE (See section 43J) Qualifications\n(i) is an advocate; or\n(ii) is an accountant."
+    got = apply(files, [{"op": "INSERT_NODE", "target": "sch.7", "position": "after", "block": block}])
+    assert got["schedule-8.md"].startswith("# THE EIGHTH SCHEDULE\n") and "- (ii) is an accountant." in got["schedule-8.md"]
+    assert "schedule-8.md" not in apply(got, [{"op": "OMIT_NODE", "target": "sch.8"}])
+    two = apply(files, [{"op": "INSERT_NODE", "target": "sch.7", "position": "after",
+                         "block": "THE EIGHTH SCHEDULE Text. THE NINTH SCHEDULE More."}])  # the 2015 Act: four in one
+    assert {"schedule-8.md", "schedule-9.md"} <= set(two)
+    got = apply(files, [{"op": "SUBSTITUTE_WORDS", "target": "s.11(4)", "old": "the appointment shall be made",
+                         "to": "designated by such Court", "new": "the institution shall appoint"}])
+    assert "third arbitrator, the institution shall appoint;" in got["section-011.md"]
+
+
+SECTION_11 = """# 11. Appointment of arbitrators.
+
+- (4) If the procedure applies and—
+  - (a) a party fails to appoint; or
+  - (b) the two fail to agree on the third arbitrator, the appointment shall be made by any person designated by such Court;
+"""
+
+
+def test_baseline_reads_schedules_parts_portions_and_ranges():
+    from baseline import baseline
+    assert baseline("After the Seventh Schedule to the principal Act, the following Schedule shall be inserted, namely:—\n"
+                    "“THE EIGHTH SCHEDULE Text.”.")[0][0] == {
+        "op": "INSERT_NODE", "target": "sch.7", "position": "after", "block": "THE EIGHTH SCHEDULE Text."}
+    assert baseline("The Eighth Schedule to the principal Act shall be omitted.")[0] == [{"op": "OMIT_NODE", "target": "sch.8"}]
+    assert baseline("After Part I of the principal Act, the following Part shall be inserted, namely:—\n"
+                    "“PART IA COUNCIL 43A. Definitions.—Text.”.")[0][0]["target"] == "s.43"
+    ops = baseline("In section 11 of the principal Act,—\n(ii) in sub-section (4), in the long line, for the portion "
+                   "beginning with ‘‘the appointment shall be made’’ and ending with ‘‘designated by such Court’’, the "
+                   "following shall be substituted, namely:—\n‘‘the institution shall appoint’’;\n"
+                   "(ix) for sub-sections (11) to (14), the following sub-sections shall be substituted, namely:—\n"
+                   "“(11) Text.”.")[0]
+    assert ops[0] == {"op": "SUBSTITUTE_WORDS", "target": "s.11(4)", "old": "the appointment shall be made",
+                      "to": "designated by such Court", "new": "the institution shall appoint"}
+    assert [op["target"] for op in ops[1:]] == ["s.11(14)", "s.11(13)", "s.11(12)", "s.11(11)"]
+    assert baseline('In the Fourth Schedule, for the brackets, words and figures "[See section 11 (14)]", the brackets, '
+                    'words and figures "[See section 11(3A)]" shall be substituted.')[0][0]["target"] == "sch.4"  # not quoted
+
+
+def test_examples_show_the_law_and_round_trip():
+    """M2.md T19: the input shows the files a provision names, line by line with IDs; targets in the output are
+    those IDs, and the output applied gives the law the operations did."""
+    from examples import example, in_view, named
+    assert named("In section 30 of the principal Act, for “section 7 or 9”, the words “sections 7, 9 and 10” "
+                 "shall be substituted; the Fourth Schedule") == {"s.30", "sch.4"}
+    law = {"part-iii/article-014.md": "# 14. Equality.\n\nText.\n", **F}
+    ops = [{"op": "SUBSTITUTE_WORDS", "target": "art.15/proviso", "old": "wells", "new": "tanks"}]  # found by fallback
+    source, output, targets = example(law, "Amendment of article 15.", "In article 15, in the proviso, ...", ops)
+    assert "art.15(2)/proviso\t  - *Provided that* nothing here applies to wells." in source
+    assert "art.14\t# 14. Equality." in source and "Text." not in source.split("---")[1]  # a neighbour: its heading
+    parsed = json.loads(output)
+    assert parsed[0]["target"] == "art.15(2)/proviso" and in_view(law, targets, parsed)
+    assert apply(law, parsed) == apply(law, ops)
 
 
 def test_words_that_occur_twice_need_every():
