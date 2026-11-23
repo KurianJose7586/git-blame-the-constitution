@@ -1,6 +1,6 @@
 # Kickoff: how M0 and M1 get built
 
-Written 21 Nov 2026 from PLAN.md, DELIVERABLES.md and the concept mockup. PLAN.md says what to build and in what order. This file says how: the file formats, the scripts, and when each task counts as done. It covers M0 and M1 only, because M2 onward depends on numbers that M1 produces. Revisit at the M0 gate.
+Written 21 Nov 2026 from PLAN.md, DELIVERABLES.md and the concept mockup. PLAN.md says what to build and in what order. This file says how: the file formats, the scripts, and when each task counts as done. It covers M0 and M1 only, because M2 onward depends on numbers that M1 produces; [M2.md](M2.md) picks up from there. Revisit at the M0 gate.
 
 Tools on this machine are enough for M0: Python 3.12, uv 0.7, git 2.50 and Node 22. The only new Python dependency is `pyyaml`.
 
@@ -195,7 +195,7 @@ These are rougher; refine them at the M0 gate. Folder names follow PLAN §6.
 | **Decided 21 Nov 2026: commit them with an `Instrument: notification` trailer.** The RTI Act's Second Schedule is amended by government notifications under s. 24(2), not by amending acts (the CBI was added this way in 2011). PLAN keeps such instruments out of the commits, but then the repository won't match India Code. Recommended: commit them with an `Instrument: notification` trailer. The alternative is a different small act for M0 | T7 | Before T7 |
 | Pick the organisation name, then create it and the two law repositories | T8 | Week 2 |
 | Ask your mentor for a law-faculty contact, for reviewers and the section 52(1)(q) question | The public launch at M3, not M0 | Week 1 |
-| T18's last Act, and POCSO's last two instruments. From the e-Gazette (Search, then Search by Bill / Assent / Act; the search needs no CAPTCHA, a document opens on your click), into your Downloads: the Arbitration and Conciliation Act, 1996 and its amending Acts of 2015, 2019 and 2021 (Gazette IDs 48447, 167377, 210414, 225832), and the Criminal Law (Amendment) Act, 2018 (188472). The Criminal Law (Amendment) Act, 2013 isn't in the e-Gazette's index: from India Code by hand. A consolidated Arbitration Act from India Code by hand, for the comparison | T18 | Now |
+| T18's last Act, and POCSO's last two instruments. From the e-Gazette (Search, then Search by Bill / Assent / Act; the search needs no CAPTCHA, a document opens on your click), into your Downloads: the Arbitration and Conciliation Act, 1996 and its amending Acts of 2015, 2019 and 2021 (Gazette IDs 48447, 167377, 210414, 225832), and the Criminal Law (Amendment) Act, 2018 (188472). The Criminal Law (Amendment) Act, 2013 isn't in the e-Gazette's index, and India Code doesn't list it either (it lists Acts as amended, not amending Acts), so a copy UNHCR keeps on ecoi.net instead; and the Arbitration Act as amended up to 2021 from WIPO Lex, since indiacode.nic.in times out. Both wait for your yes to download | T18 | Now |
 
 ## Don't start yet
 

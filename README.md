@@ -23,6 +23,7 @@ Acceptance criteria for each one are in [DELIVERABLES.md](DELIVERABLES.md).
 |---|---|
 | [PLAN.md](PLAN.md) | Phased implementation plan (M0 to M4), key decisions, data model, architecture, compute, legal checks, risks, and how this runs alongside lost-in-transcription |
 | [KICKOFF.md](KICKOFF.md) | How M0 and M1 get built: file formats, commit format, reader data, tasks with done-when, and what needs you |
+| [M2.md](M2.md) | How M2 gets built: the task format, the datasets and IndiaAmend-200, the baselines, the model, the gate, and what needs you (a draft) |
 | [DELIVERABLES.md](DELIVERABLES.md) | Every deliverable with its definition of done |
 | [EXPECTED_RESULTS.md](EXPECTED_RESULTS.md) | Metrics, baselines, experiments, targets, and what you can still claim if a target is missed |
 
@@ -74,6 +75,6 @@ Tests: `uv run pytest` and `node --test reader/app.test.mjs`.
 
 - Concept mockup (private to you): https://claude.ai/artifact/TjPSty3edyvHhbFByaM7LT
 - Sibling project: [../lost-in-transcription](../lost-in-transcription)
-- India Code: https://www.indiacode.nic.in
+- India Code: https://www.indiacode.gov.in
 - legislation.gov.uk (training data under the Open Government Licence): https://www.legislation.gov.uk
 - Closest prior work, algorithmic legislative consolidation: https://arxiv.org/abs/2501.16794
