@@ -21,7 +21,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1] / "ingest"))
 from footnotes import parse_all  # noqa: E402
-from ops import structure  # noqa: E402
+from ops import ORDINALS, follows, structure  # noqa: E402
 
 # Footnote markers become tokens, which survive line joining, so each can be traced to the lines it covers:
 # "1[" opens a bracket and its "]" closes it; "1* * *" marks an omission.
@@ -31,26 +31,30 @@ HEADER = re.compile(r"^(?:\d+\s+)?THE CONSTITUTION OF INDIA$|^\((?:Part|.*Schedu
 NOTE = re.compile(r"^(\d+)(?:\.\s*|\s+)(?=\S)|^(\uf02a+)\s*|^(\*+)\s+(?=[A-Z])")
 NOTE_NEXT = re.compile(r"^(\d+)(?:\.\s*|\s+(?=[A-Z][a-z]))(?=\S)|^(\uf02a+)\s*|^(\*+)\s+(?=[A-Z])")
 PART = re.compile(r"^PART\s+([IVXL]+[A-Z]?)$")
-ORDINALS = "FIRST SECOND THIRD FOURTH FIFTH SIXTH SEVENTH EIGHTH NINTH TENTH ELEVENTH TWELFTH".split()
-SCHEDULE = re.compile(rf"^(?:\d+\s+)?(?:THE\s+)?(?:({'|'.join(ORDINALS)})\s+)?SCHEDULE$")  # "16 THE SCHEDULE": an Act's only one
+SCHEDULE = re.compile(rf"^(?:\d+\s+)?(?:THE\s+)?(?:((?i:{'|'.join(ORDINALS)}))\s+)?SCHEDULE$")  # "16 THE SCHEDULE": an Act's only one
 ENTRY = re.compile(r"^(\d+[A-Z]*)(?:\.\s|\.?\s*\*)")  # a Schedule's paragraph or entry: "1. Interpretation.—", "18.* * *"
 CHAPTER = re.compile(r"^CHAPTER\s+([IVXL]+)\.\s*—\s*(.*)$")
 ACT_CHAPTER = re.compile(r"^CHAPTER\s+([IVXL]+[A-Z]?)$")
-ENACTING = re.compile(r"^(?:An Act to|WHEREAS|AND WHEREAS|Now,?\s+THEREFORE|BE it enacted)")
-ARTICLE = re.compile(r"^\[?(\d+)([A-Z]*)\.(?:\s|(?=[A-Z][a-z]))")  # "[232. Interpretation.—...]", "41.Provisions"
+ENACTING = re.compile(r"^(?:An Act\b|WHEREAS|AND WHEREAS|Now,?\s+THEREFORE|BE it enacted)")
+ARTICLE = re.compile(r"^\[?(\d+)-?([A-Z]*)\.(?:\s|(?=[A-Z][a-z]))")  # "[232. Interpretation.—...]", "41.Provisions", "371-I."
 LABEL = re.compile(r"^\((\d+[A-Z]*|[a-z]{1,6}|[A-Z])\)(?=\s|\*|$|\()")  # "(f)* * *": an omitted clause
 # A provision that opens with two labels, "(2)(a) There shall be" or "(3) (a) Subject to": clause (2) starts with
 # its sub-clause (a). Split after the first label, so each can be cited, as art.239AA(2)(a).
 DOUBLE = re.compile("^((?:[\x02\x04\x05][^\x03]*\x03)*\\(\\w{1,6}\\))\\s*(?=(?:[\x02\x04\x05][^\x03]*\x03)*\\(\\w{1,6}\\)(?:[\x02\x04\x05][^\x03]*\x03)*\\s)")
-HEAD_END = re.compile("\\.((?:[\x02\x04\x05][^\x03]*\x03|\\])*)\\s*(?:—|-(?=\\s))")  # art. 330A ends its heading ".-"
+HEAD_END = re.compile("\\.((?:[\x02\x04\x05][^\x03]*\x03|\\])*)\\s*(?:—|–+|-(?=\\s))")  # art. 330A ".-", arts. 124B, 124C ".––"
 DONE = re.compile(r"(?:[—:;.,*]|[;,]\s*(?:and|or))$")
 OMISSION = re.compile(r"\s*\*(?:\s*\*){2,}")
-ROMANS = "i ii iii iv v vi vii viii ix x xi xii xiii xiv xv xvi xvii xviii xix xx".split()
+GONE = re.compile(r"\s*(?:\[[^\]]*\]\.?\s*)?(?:Rep\.|Repealed|Omitted)")  # an article or section with no text left
 
 
 def flat(text):
     """Tokens out, wrapped lines joined ("sub-" / "clause" -> "sub-clause"), whitespace collapsed."""
     return " ".join(re.sub(r"(?<=-)\s*\n\s*", "", TOKEN.sub("", text)).split())
+
+
+def words(text):
+    """A line as the files show it: flat, omission stars out ("the States of * * * Maharashtra")."""
+    return " ".join(OMISSION.sub("", flat(text)).split())
 
 
 def join(a, b):
@@ -79,7 +83,7 @@ def clean(number, text):
         if not m or m[1] not in (None, "1"):  # a block starts with note 1 or a "*" note
             continue
         block = lines[i:]
-        if i and lines[i - 1].count("(") > lines[i - 1].count(")"):
+        if i and re.fullmatch(r"\([^()]*", lines[i - 1].strip()):
             # a side note set beside the first footnote ("(date yet to be" / "notified).") belongs to it
             block, i = [block[0], lines[i - 1], *block[1:]], i - 1
         notes = split_notes(block)
@@ -89,6 +93,8 @@ def clean(number, text):
         body = notes and place(body, list(notes), number)
         if body:
             return body.split("\n"), {f"{number}.{k}": v for k, v in notes.items()}, True
+        if notes and all(k[0] == "p" for k in notes):  # "* Paragraph 7 declared invalid ...", its marker on the
+            return lines[:i], {}, False                  # page before: out of the body, and the page unpaired
     return lines, {}, not re.search(r"\d[\[*]|\uf02a", "\n".join(lines))  # paired if there was nothing to pair
 
 
@@ -129,7 +135,7 @@ def strong(k):
 
     Notes "*", "**", ... are marked with runs of the glyph U+F02A."""
     if k[0] == "p":
-        return re.compile(rf"(?<![\w*])\*{{{len(k) - 1}}}(?=\d{{1,2}}\[|[A-Z])")  # "*3[239A.", "of *Puducherry"
+        return re.compile(rf"(?<![\w*])\*{{{len(k) - 1}}}(?=\d{{1,2}}\[|[A-Za-z])")  # "*3[239A.", "of *Puducherry", "*four"
     if k[0] == "*":
         return re.compile(rf"(?<!\uf02a)\uf02a{{{len(k)}}}(?!\uf02a)\[?")
     return re.compile(rf"(?<![\d(]){k}(?: ?\[|(?=\*|\(\w+\)\s*\*))")  # WIPO's copy of India Code: "2 [29A."
@@ -190,7 +196,8 @@ def brackets(stream, starts, never=frozenset()):
 def unstack(stream):
     """The oath forms print "solemnly affirm" on its own line under "swear in the name of God", as alternatives.
     Read in order it lands mid-sentence; put it beside them instead, as M0's RTI Act has it:
-    "swear in the name of God / solemnly affirm". A label printed against its text, "(1)Where", gets its space."""
+    "swear in the name of God / solemnly affirm". A label printed against its text, "(1)Where", "(a)the", gets its
+    space."""
     out = []
     for page, line in stream:
         swear = out and re.search(r"swear\s+in\s+the\s+name\s+of\s+God", out[-1][1])
@@ -198,7 +205,7 @@ def unstack(stream):
             prev = out[-1][1]
             out[-1] = (out[-1][0], prev[:swear.end()] + " / solemnly affirm" + prev[swear.end():])
         else:
-            out.append((page, re.sub("((?:^|—)(?:[\x02\x04\x05][^\x03]*\x03)*\\(\\w{1,6}\\))(?=[A-Z])", r"\1 ", line)))
+            out.append((page, re.sub("((?:^|—)(?:[\x02\x04\x05][^\x03]*\x03)*\\(\\w{1,6}\\))(?=[A-Za-z])", r"\1 ", line)))
     return out
 
 
@@ -213,10 +220,12 @@ def segment(stream, act=False):
     units, starts, last, i = [], {}, (0, ""), 0
     texts = [flat(line) for _, line in stream]
 
-    def article_at(j):
+    def article_at(j):  # its heading ends within its own first lines, or it says it's gone: "3. [Penalty.] Rep. by"
         m = j < len(texts) and ARTICLE.match(texts[j])
-        return bool(m) and last < key(m) and key(m)[0] - last[0] <= 20 and bool(
-            HEAD_END.search("\n".join(line for _, line in stream[j:j + 4])))
+        if not (m and last < key(m) and key(m)[0] - last[0] <= 20):
+            return False
+        end = next((k for k in range(j + 1, j + 4) if k < len(texts) and ARTICLE.match(texts[k])), j + 4)
+        return bool(HEAD_END.search("\n".join(line for _, line in stream[j:end])) or GONE.match(texts[j][m.end():]))
 
     def heading_at(j):
         return (0 < len(texts[j]) <= 80 and not DONE.search(texts[j]) and not LABEL.match(texts[j])
@@ -225,10 +234,10 @@ def segment(stream, act=False):
     while i < len(stream):
         line, text = stream[i][1], texts[i]
         if not units:
-            if text == "PREAMBLE" or act and text.startswith("An Act to"):
+            if text == "PREAMBLE" or act and re.match(r"An Act\b", text):  # "An Act to", "An Act further to amend"
                 units.append(["preamble", [] if text == "PREAMBLE" else [line]])
         elif m := SCHEDULE.match(text):
-            units.append(["schedule", ORDINALS.index(m[1]) + 1 if m[1] else 1, line, []])
+            units.append(["schedule", ORDINALS.index(m[1].lower()) + 1 if m[1] else 1, line, []])
             starts[i] = "part"
         elif units[-1][0] == "schedule":  # a Schedule runs to the next one: no Parts or articles inside
             units[-1][-1].append(line)
@@ -284,7 +293,9 @@ def provisions(lines):
         if not text:
             continue
         m = LABEL.match(text)
-        starts = (m and (plausible(m[1], seen) or text[m.end():].lstrip().startswith("*"))  # "(2)* * *" stands
+        plausible = m and (m[1] in ("1", "a", "i", "A") or any(  # a first label, or one that can follow one seen
+            follows(m[1], last) for last in seen))
+        starts = (plausible or m and text[m.end():].lstrip().startswith("*")  # "(2)* * *" stands
                   or text.startswith(("Provided", "Explanation")))
         if out and not (starts and done(out[-1])):
             out[-1] = join(out[-1], line.strip())
@@ -301,33 +312,24 @@ def provisions(lines):
     return split
 
 
-def plausible(label, seen):
-    """A label that can come here: a first one, or the next after one already seen in this article."""
-    if label in ("1", "a", "i", "A"):
-        return True
-    for last in seen:
-        if label.startswith(last) or label in ROMANS and last in ROMANS and ROMANS.index(label) == ROMANS.index(last) + 1:
-            return True
-        if label.isdigit() and last.rstrip("ABCDEFGH").isdigit() and int(label) == int(last.rstrip("ABCDEFGH")) + 1:
-            return True
-        if len(label) == 1 and len(last) <= 2 and ord(label) == ord(last[0]) + 1:
-            return True
-    return False
-
-
 def article(lines):
-    """(heading's source, [(file line, source)] after the heading, [(text, source)] of omitted clauses)."""
+    """(heading's source, [(file line, source)] after the heading, [(number of file lines before it, text, source)]
+    of omitted clauses)."""
     text = "\n".join(line for line in lines if flat(line))
     m = HEAD_END.search(text)
+    if not m:  # "3. [Penalty.] Rep. by Act 1 of 2000.": all heading
+        return text, [], []
     head, body = text[:m.start() + 1] + m[1], text[m.end():]
-    provs = [(" ".join(OMISSION.sub("", flat(p)).split()), p) for p in provisions(body.split("\n"))]
+    provs = [(words(p), p) for p in provisions(body.split("\n"))]
     first = next((n for n, (_, p) in enumerate(provs) if LABEL.match(flat(p)) or flat(p).startswith(
         ("Provided", "Explanation"))), len(provs))
     kept, omitted = [], []
-    for words, p in provs[first:]:  # a clause that is only its label was omitted: "(f)* * * * *"
-        gone = not words or re.fullmatch(r"\([^)\s]+\)", words) and "*" in flat(p)  # not "(2)" before "(a) ..."
-        (omitted if gone else kept).append((words, p))
-    lines = structure("\n".join(words for words, _ in kept)) if kept else []
+    for w, p in provs[first:]:  # a clause that is only its label was omitted: "(f)* * * * *"
+        if not w or re.fullmatch(r"\([^)\s]+\)", w) and "*" in flat(p):  # not "(2)" before "(a) ..."
+            omitted.append((first + len(kept), w, p))
+        else:
+            kept.append((w, p))
+    lines = structure("\n".join(w for w, _ in kept)) if kept else []
     return head, provs[:first] + [("  " * depth + "- " + line, p) for (depth, line), (_, p) in zip(lines, kept)], omitted
 
 
@@ -364,9 +366,9 @@ def schedule(lines):
     def flush():
         kept = []
         for p in run:
-            words = " ".join(OMISSION.sub("", flat(p)).split())
-            gone = not words or re.fullmatch(r"\([^)\s]+\)|\d+[A-Z]*", words.rstrip(". ")) and "*" in flat(p)  # "7. ***."
-            (omitted if gone else kept).append((words, p))
+            w = words(p)
+            gone = not w or re.fullmatch(r"\([^)\s]+\)|\d+[A-Z]*", w.rstrip(". ")) and "*" in flat(p)  # "7. ***."
+            (omitted if gone else kept).append((w, p))
         if kept:
             out.append(("", None))
             out.extend(("  " * depth + "- " + line, p) for (depth, line), (_, p) in
@@ -377,9 +379,8 @@ def schedule(lines):
         if is_heading or not (ENTRY.match(flat(sources[0])) or LABEL.match(flat(sources[0])) or
                               flat(sources[0]).startswith(("Provided", "Explanation"))) and not run:
             flush()
-            words = " ".join(OMISSION.sub("", flat("\n".join(sources))).split())
-            if words:
-                out += [("", None), (words, "\n".join(sources))]
+            if w := words("\n".join(sources)):
+                out += [("", None), (w, "\n".join(sources))]
             else:  # "* * * * *": a Part omitted
                 omitted.append(("", "\n".join(sources)))
         else:
@@ -397,6 +398,8 @@ def parse(pages, act=False):
     path None and a label for what has no file (omitted articles, sub-headings). engine/rebuild.py reads it."""
     stream, notes, unpaired = [], {}, []
     start = next(i for i, text in enumerate(pages) if ("BE it enacted" if act else "WE, THE PEOPLE OF INDIA") in text)
+    if act and start and not re.search(r"(?m)^\s*An Act\b", pages[start]):  # the long title ends the page before
+        start -= 1
     for i in range(start, len(pages)):
         body, page_notes, paired = clean(i + 1, pages[i])
         stop = next((j for j, line in enumerate(body)  # the Appendices, or a Bill's statement after an Act
@@ -415,6 +418,8 @@ def parse(pages, act=False):
     never = brackets(stream, starts)[1]
     stream, left, stray = brackets(stream, starts, {e[2] for e in never})
     units = segment(stream, act)[0]
+    if not units:
+        raise ValueError("no PREAMBLE" + (" or long title (\"An Act ...\")" if act else ""))
 
     files, trail = {}, []  # trail: (path, line number, source) in document order; path None for what has no file
     report = {"pages": [stream[0][0], stream[-1][0]], "pages_with_unpaired_footnotes": unpaired,
@@ -468,7 +473,7 @@ def parse(pages, act=False):
                 title = title if act else [line.split("—", 1)[1]] + title
             put(path, f"# {kind.upper()} {num}", line)
             files[path].append("")
-            put(path, " ".join(OMISSION.sub("", flat("\n".join(title))).split()), "\n".join(title))  # "THE STATES * * *"
+            put(path, words("\n".join(title)), "\n".join(title))  # "THE STATES * * *"
         elif kind == "schedule":
             path = f"schedule-{unit[1]}.md"
             put(path, f"# {flat(unit[2])}", unit[2])  # as printed: "FIRST SCHEDULE", "THE FIRST SCHEDULE"
@@ -479,8 +484,8 @@ def parse(pages, act=False):
                     files[path].append(text)
                 else:
                     put(path, text, source)
-            for words, source in omitted:
-                report["omitted_provisions"].append({"schedule": unit[1], "text": words})
+            for w, source in omitted:
+                report["omitted_provisions"].append({"schedule": unit[1], "text": w})
                 trail.append((None, f"sch.{unit[1]}", source))
             if e1_words("\n".join(unit[3])) == e1_words("\n".join(files[path][1:])):
                 e1_ok += 1
@@ -494,13 +499,14 @@ def parse(pages, act=False):
             trail.append((None, "sub-heading", "\n".join(unit[1])))
         elif kind == "article":
             head, lines, omitted = article(unit[2])
-            heading = " ".join(OMISSION.sub("", flat(head)).split())  # "the States of * * * Maharashtra"
+            heading = words(head)  # "the States of * * * Maharashtra"
             number = ARTICLE.match(heading)
             label = f"{number[1]}{number[2]}"
             numbers.append(int(number[1]))
-            body_text = flat("\n".join(source for _, source in lines))
-            if heading.startswith("[") or heading.split(" ", 1)[1].startswith("[") and body_text.startswith(
-                    ("Omitted", "Rep.")):
+            rest, body_text = heading.split(" ", 1)[1], flat("\n".join(source for _, source in lines))
+            # "2A. [Sikkim.].—Omitted by ...", "226A. Constitutional validity ...].—Omitted by ..." in one line, or
+            # "3. [Penalty.] Rep. by Act 1 of 2000."
+            if heading.startswith("[") or GONE.match(body_text or rest) and (rest.startswith("[") or len(lines) <= 1):
                 report["omitted_articles"].append({"article": label, "text": flat("\n".join(unit[2]))})
                 trail.append((None, f"art.{label}", "\n".join(unit[2])))
                 continue
@@ -509,11 +515,11 @@ def parse(pages, act=False):
             path = f"{folder}{'section' if act else 'article'}-{int(number[1]):03d}{number[2].lower()}.md"
             put(path, f"# {heading}", head)
             files[path].append("")
-            for text, source in lines:
+            for n, (text, source) in enumerate(lines):  # an omitted clause goes in the trail where it was
+                trail += [(None, f"art.{label}", s) for k, _, s in omitted if k == n]
                 put(path, text, source)
-            for words, source in omitted:
-                report["omitted_provisions"].append({"article": label, "text": words})
-                trail.append((None, f"art.{label}", source))
+            trail += [(None, f"art.{label}", s) for k, _, s in omitted if k == len(lines)]
+            report["omitted_provisions"] += [{"article": label, "text": w} for _, w, _ in omitted]
             if e1_words("\n".join(unit[2])) == e1_words("\n".join(files[path])):
                 e1_ok += 1
             else:
@@ -544,8 +550,8 @@ def parse(pages, act=False):
         for fid in hit:
             if fid in covers:
                 covers[fid].append([path, number] if path else [number])
-        for fid, words in re.findall("\x02([^\x03]*)\x03(.*?)\x04\\1\x03", source, re.S):
-            spans[fid] = flat(words)
+        for fid, inside in re.findall("\x02([^\x03]*)\x03(.*?)\x04\\1\x03", source, re.S):
+            spans[fid] = flat(inside)
     provenance = {i: {**parsed[i], "page": int(i.split(".")[0]), "marker": i.split(".")[1], "covers": covers[i],
                       "words": spans.get(i)} for i in ids}
     used = {fid for _, _, s in trail for _, fid in TOKEN.findall(s)}
@@ -571,7 +577,7 @@ def e1_words(text):
     text = OMISSION.sub("", text)
     text = re.sub(r"(?<=-)[ \t]*\n\s*", "", text)
     text = re.sub(r"^\s*(?:#|-) ", "", text, flags=re.M)
-    return re.sub(r"[*\[\]]", "", text).replace("—", " ").replace(")(", ") (").split()  # "(2)(a)" is two labels
+    return re.sub(r"[*\[\]]", "", text).replace("—", " ").replace("–", " ").replace(")(", ") (").split()  # "(2)(a)" is two labels
 
 
 def round_trip(lines):
@@ -599,8 +605,8 @@ if __name__ == "__main__":
     for path, text in files.items():
         (out / path).parent.mkdir(parents=True, exist_ok=True)
         (out / path).write_text(text, encoding="utf-8", newline="\n")
-    (out / "provenance.json").write_text(json.dumps(provenance, ensure_ascii=False, indent=1), encoding="utf-8")
-    (out / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
+    (out / "provenance.json").write_text(json.dumps(provenance, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
+    (out / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
     e1, fn = report["e1"], report["footnotes"]
     print(f"{len(files)} files, {report['articles']} articles, {report.get('schedules', 0)} Schedules; E1 words {e1['words_match']}/{e1['files']}, "
           f"round trip {e1['provisions_round_trip']}/{e1['provisions_round_trip'] + len(e1['provisions_not_round_tripping'])}"

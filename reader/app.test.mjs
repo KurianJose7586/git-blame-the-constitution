@@ -34,3 +34,10 @@ test("routes round-trip", () => {
     "#/constitution/preamble?view=blame",
   ]) assert.equal(route(parseRoute(h)), h);
 });
+
+test("a date that isn't a date is dropped", () => {
+  assert.equal(parseRoute('#/c/p@"><img src=x onerror=alert(1)>').date, null);
+  assert.equal(parseRoute("#/c/p@%22%3E%3Cx%3E").date, null); // as location.hash gives it
+  assert.equal(parseRoute('#/c/p@"><x>..2020-01-01').from, null);
+  assert.equal(parseRoute('#/c/p@2020-01-01.."><x>').date, null);
+});

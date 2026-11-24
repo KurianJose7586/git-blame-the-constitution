@@ -3,17 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/diff@5.2.0/dist/diff.min.js; style-src 'self' 'unsafe-inline'">
 <title>git blame the Constitution</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/diff@5.2.0/dist/diff.min.js" integrity="sha256-yb2fdELbCTx5a1G2KuGZthnBWP12GkyprIXaWKgCS4w=" crossorigin="anonymous"></script>
 <style>
 :root{
   --bg:#f3f4f1;--surface:#fff;--inset:#eceee9;--ink:#14171a;--ink-2:#4a5056;--ink-3:#697076;--line:#d9dcd5;--line-2:#bfc4bd;
   --mark:#ffe14d;--mark-ink:#3a2f00;--add-bg:#d9f2d9;--add-ink:#0b5a0b;--rem-bg:#f9dede;--rem-ink:#8f1d1d;
   --era1:#2a78d6;--era2:#eb6834;--era3:#1baf7a;--era4:#eda100;--era5:#8a5cd6;--era6:#d6457a;--era7:#0e9aa7;--era8:#8d6e3f;
-  --f-ui:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;--f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;--f-law:"Source Serif 4",Georgia,serif;
+  --f-ui:system-ui,-apple-system,"Segoe UI",sans-serif;--f-mono:ui-monospace,Consolas,monospace;--f-law:Georgia,serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root{
@@ -88,7 +86,7 @@ del{background:var(--rem-bg);color:var(--rem-ink);border-radius:3px;padding:0 1p
 <body>
 <header class="wrap top">
   <a class="brand" href="#/"><code>git blame</code> the Constitution</a>
-  <p class="disclaimer"><b>Unofficial</b> Not legal advice. <a id="official" href="https://www.indiacode.nic.in">Official text</a></p>
+  <p class="disclaimer"><b>Unofficial</b> Not legal advice. <a id="official" href="https://www.indiacode.gov.in">Official text</a></p>
 </header>
 <main class="wrap" id="app"></main>
 <script type="module" src="app.js"></script>

@@ -68,7 +68,7 @@ Same command as above; parsed pages now run to 381, the end of the Twelfth Sched
 | | Count |
 |---|---|
 | Files | 532: 471 articles, 12 Schedules, 48 Part and Chapter headings, the Preamble |
-| **E1, words:** article and Schedule files whose words equal their source's | **483 / 483** |
+| **E1, words:** article and Schedule files whose words equal their source's | **483 / 483** (over the wrong 471 articles until 24 Nov: see there) |
 | **E1, round trip:** list items that `structure()` reads back the same, each list on its own | **2760 / 2760** |
 | Footnotes | 772 |
 | … recording a change, with the instrument found | **732 / 736** (the 4: three state-government notifications and one "s. 74 and Fourth Sch. of" an Act) |
@@ -86,7 +86,7 @@ The Schedules' tables (First, Fourth, and the Sixth's table of tribal areas) com
 | Commits (one per section of each instrument) | 441 |
 | Changes undone: words put back as quoted / insertions removed / placeholders | 261 / 268 / 242 |
 | Changes that couldn't be undone (listed in the report) | 11 |
-| **Replayed forwards, the history gives today's text** | **exactly** |
+| ~~Replayed forwards, the history gives today's text~~ | ~~exactly~~: true by construction, withdrawn 24 Nov |
 | The rebuilt 1950 text | 393 of 395 articles, Schedules 1–8, 160 placeholders |
 | **1950 Article 15 against M0's hand-made one** | **identical** |
 | 1950 Preamble against M0's | identical but for one letter: "Unity of the Nation", the footnote's misquote of the 42nd Amendment (observed 21 Nov) |
@@ -336,3 +336,34 @@ Inputs: median 2,044 characters, 90% under 5,042, one over 16,000 (26,746: an IB
 | At 2021: files matching | 88 of 130 |
 
 The 22 files with new differences at 2021: **ss. 2 and 11**, the 2019 Act's ss. 2 and 3, which aren't in force (WIPO's copy cites only its ss. 4 to 13, and Part IA from 12 Oct 2023), and the 2015 replay's gaps in s.11; **Part IA, ss. 43A to 43M** (13 files), WIPO's text layer drops the dash after most headings, so its parse runs sections together; **s.12**, the base's placeholder; **ss. 29A and 34**, Jammu and Kashmir and Ladakh adaptations printed inside the sections, and "endeavor"; **s.31**, India Code keeps the old Explanation to s.31(8), which explains a clause (a) the 2015 substitution of (8) removed; **s.31A**, WIPO's footnote numbering; **s.36**, a word broken at a line end in the 2015 Act's text ("enforce ment"); **s.42A**, WIPO's "contained by" and "confidentially"; **s.87**, the Gazette's margin citations.
+
+## 2026-11-24: The audit, and what its fixes change
+
+`notes/audit-2026-11-24.md` read all the code and found errors that produce wrong text without an error: 7 in the parser and the rebuild, 3 in the executor and the baseline, and a cross-site scripting hole in the reader. None changes what's published or M0's results. All of the high and medium findings are fixed, each with a test where it can be shown on made-up text; 66 Python tests pass (49 before). What was skipped, and why: P11 (the slider before the first version; a UI change), R17 and R22 (suspected only), R20 (its one case is better as a placeholder), and the half of E19 that would tell a quoted Schedule's "1." from a new section (the Gazette texts' curly quotes don't balance, so counting them can't tell).
+
+**Two claims that couldn't fail.** "Replayed forwards, the history gives today's text: exactly" (22 Nov) is true whatever the undo steps do, because each commit stores the snapshot it was built from. It's withdrawn. The tests now check the rebuilt 1950 text itself: Article 15 and the Preamble against M0's, art. 19's and art. 214's clauses in order, art. 226's clause (7) with its text before 1979, and the 38th Amendment's year. E1 compares each unit with its own stretch of the source, so it couldn't see text in the wrong article. It still reads 483/483, and the 471 articles are now the right ones: the parse matches the Constitution's own list of contents, all 506 entries (471 files, 34 omitted articles, and art. 238).
+
+| The Constitution | Before | Now |
+|---|---|---|
+| Articles written as files | 471, with 131A, 226A and 228A (omitted in 1977) live, and 124B, 124C and 371-I glued into the articles before them | 471, as the list of contents has them |
+| Footnotes / changes understood | 772 / 732 of 736 | 773 / 732 of 736 |
+| ... with an in-force date | 714 | 698: the 38th Amendment's notes no longer take the 44th's date |
+| Pages with a footnote left unpaired | 0 | 1 (p. 379: the Tenth Schedule's para 8(3), whose note's marker is on the page before; the note was in the text) |
+| Silver history: commits / entries | 441 / 175 | 443 / 150 (an Act's sections on one day no longer interleave with another's) |
+| ... words put back / insertions removed / placeholders | 261 / 268 / 242 | 267 / 268 / 247 |
+| ... changes that couldn't be undone | 11 | 10 |
+| ... sections committed later than their date | 25 | 4, all table rows in the First and Fourth Schedules whose brackets the source never closes or whose columns interleave |
+| The 38th Amendment placed on | 1979-06-20 | 1975 |
+| The rebuilt 1950 text | 393 of 395 articles | 392 of 395: 238 and 243 as before, and 231 (below) |
+
+In the rebuilt 1950 text, art. 19's (f) now sits between (e) and (g) (it was nested under (6) at the end), art. 214 reads (1), (2), (3) once each (it read (3), (2), (3), (2)), art. 226's (7) keeps its text, and arts. 131A, 226A and 228A are inserted in 1977 and gone in 1978. Art. 231 is a gap: one note of the Seventh Amendment covers arts. 230 to 232, and the rebuild used to leave a stray clause with no heading in 231's place; now it leaves nothing, which is honest but still wrong.
+
+RTI 16 of 17, POCSO 20 of 20 and Arbitration 40 of 40 changes are understood, as before. POCSO's rebuilt 2012 text gains one space ("(a)the" read as "(a) the"); the Arbitration Act's 1996 text is unchanged.
+
+**The Arbitration Act at 2021 (these replace 23 Nov's).** WIPO's headings ending ".––" are now read, so Part IA's sections parse apart (97 sections, now 105). At 2021, 99 of 130 files match (88 before) and 11 have new differences (22): Part IA's 13 are down to s.43A; the other ten are those explained on 23 Nov. The 2021 Act's s.3 becomes silver.
+
+**The executor and the baseline.** The fixes made no silver example's input or output change, and no provision changed outcome: 136 provisions, 124 applied, **75 silver** (IBC 46, Arbitration 22, POCSO 7), all round-trip with every target shown. M0's replay is unchanged (12 of 16 exact). What changed is what the executor accepts: every operation is now checked against `ops.schema.json` (fields, types, targets), a target that two provisions share is refused, a proviso's omission no longer takes a sibling clause, letter ranges ("(a) to (d)") are counted and a range the baseline can't count is a miss, and a quoted block holding quoted words isn't cut short. Silver examples go to `out/examples/*.jsonl`, the rest to `*.unchecked.jsonl`.
+
+**Reproducing it.** `uv run model/build-replays.py` rebuilds from `sources/` everything `model/build-silver.sh` reads, and the Constitution's parse and history, in 89 s. Against the `out/` the numbers above came from, it differs in one word: the IBC's 2016 Gazette prints "alongwith" (s.5(8), page 6, checked by eye), which the current extractor splits; `out/` keeps the Gazette's word. `notes/sources.sha256` records every source file's hash (`sha256sum -c notes/sources.sha256`).
+
+**M1's gate is met,** on PLAN's "every difference explained" branch: the IBC to 2021, POCSO to 2019 and the Arbitration Act to 2021 are replayed and checked against consolidations, with every difference explained (23 Nov, and above). No Act matches exactly.

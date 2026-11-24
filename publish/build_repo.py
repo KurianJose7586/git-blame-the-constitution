@@ -26,6 +26,8 @@ published at the end of each year.
 
 
 def git(repo, *args, env=None, input=None):
+    # Ignore the user's and system git config (templates, hooks, signing, encodings): they change hashes.
+    env = {**os.environ, "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1", **(env or {})}
     return subprocess.run(
         ["git", *args], cwd=repo, env=env, input=input,
         capture_output=True, text=True, encoding="utf-8", check=True,
@@ -57,13 +59,13 @@ def message(act, sec):
     }
     subject = act["act"] + (f", s. {section}" if section else "")
     body = (sec.get("text") or "").strip() or "\n".join(sec.get("footnotes", []))
-    footer = "\n".join(f"{k}: {v}" for k, v in trailers.items() if v is not None)
+    footer = "\n".join(f"{k}: {v}" for k, v in trailers.items() if v)
     return "\n\n".join(p for p in (subject, body, footer) if p) + "\n"
 
 
 def write(repo, path, text):
     p = PurePosixPath(path)
-    if p.is_absolute() or ".." in p.parts:
+    if p.is_absolute() or ".." in p.parts or "\\" in path or ":" in path:  # "..\" and "C:" escape on Windows
         sys.exit(f"bad path in history file: {path}")
     target = repo / p
     if text is None:
@@ -79,7 +81,7 @@ def build(history_path, out):
     if out.exists():
         sys.exit(f"{out} already exists; delete it first")
     out.mkdir(parents=True)
-    git(out, "init", "-q", "-b", "main")
+    git(out, "init", "-q", "--template=", "-b", "main")
     git(out, "config", "core.autocrlf", "false")  # same bytes, so same hashes, on Windows and Linux
     write(out, "README.md", README.format(**history) + (f"\n{history['note']}\n" if history.get("note") else ""))
 
@@ -96,10 +98,10 @@ def build(history_path, out):
                 sys.exit(f"{message(act, sec).splitlines()[0]}: changes nothing")
             when = commit_date(day, len(commits) + 1)
             env = {
-                **os.environ,
                 "GIT_AUTHOR_NAME": act["act"], "GIT_AUTHOR_EMAIL": AUTHOR_EMAIL, "GIT_AUTHOR_DATE": when,
                 "GIT_COMMITTER_NAME": COMMITTER[0], "GIT_COMMITTER_EMAIL": COMMITTER[1], "GIT_COMMITTER_DATE": when,
             }
+            # Windows' text-mode stdin turns "\n" into "\r\n"; --cleanup=whitespace strips the "\r" again.
             git(out, "commit", "-q", "--cleanup=whitespace", "-F", "-", env=env, input=message(act, sec))
             commits.append((day, git(out, "rev-parse", "HEAD").strip()))
 

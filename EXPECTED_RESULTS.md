@@ -2,6 +2,8 @@
 
 These are hypotheses and targets, not findings. Revise them after M1, once the baseline's coverage is known, and again after M2. Record actual numbers in `notes/results.md`.
 
+**Revised after M1 (24 Nov).** E2's verdict is below. IndiaAmend-200 is stratified half and half by whether the baseline fails (M2.md decision 3), so its whole-set numbers are reweighted to the held-out Acts' own failure rate before they're compared with these targets; read raw, the baseline would score 50% by construction.
+
 ## Metrics
 
 | Metric | Definition |
@@ -29,7 +31,7 @@ These are hypotheses and targets, not findings. Revise them after M1, once the b
 | ID | When | Hypothesis | Test | Success |
 |---|---|---|---|---|
 | E1 | M1 | The parser represents acts faithfully | Round trip on 30 acts | At least 99% of provisions round-trip exactly |
-| E2 | M1 | Most Indian amendment sentences are formulaic | Regex coverage and accuracy | Report both. To verify: a majority is formulaic |
+| E2 | M1 | Most Indian amendment sentences are formulaic | Regex coverage and accuracy | Report both. To verify: a majority is formulaic. **After M1:** coverage held out is 51–93% per Act, so a majority, for coverage. Accuracy held out is measured for one Act only (the 2019 Arbitration amendment: 14 of 15 covered, 10 of 14 applied cleanly, one of them wrong); T20 measures it per Act |
 | E3 | M2 | The 1.5B model with constrained decoding and the verifier matches the 70B model at a small fraction of the cost | Provision exact match and cost on IndiaAmend-200 | Equal or better, at 5% of the cost or less |
 | E4 | M2 | Rewriting whole provisions drifts on long text; edit operations don't | Unintended-change rate by provision length, rewrite mode against edit mode | Rewrite mode's rate grows with length; edit mode's stays near zero |
 | E5 | M2 | The constraints matter | Validity and exact match with and without the grammar and the target-ID rule | 100% validity with constraints, and a measurable exact-match gain |

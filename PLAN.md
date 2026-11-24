@@ -229,6 +229,8 @@ The quoted drafting shows the style; it isn't quoted from a specific act.
 
 One repository for the code, plus one repository per law, kept under a GitHub organisation. These planning docs can stay at the root of the code repository.
 
+The folders below were the first plan. `parse/`, `dsl/` and `baseline/` became one `engine/` folder (`notes/decisions.md`, 22 Nov); the rest are made when their milestone starts.
+
 ```
 git-blame-the-constitution/
   ingest/    fetch, OCR and clean text from India Code, Gazette PDFs and legislation.gov.uk

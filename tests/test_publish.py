@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from build_repo import build, git
+from build_repo import build, git, write
 from export import blame, export
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -78,9 +78,15 @@ def test_blame_matches_footnotes(built, law):
 
 
 @pytest.mark.parametrize("law", LAWS)
-def test_build_is_deterministic(built, law, tmp_path):
+def test_build_is_deterministic(built, law, tmp_path, monkeypatch):
+    # Every build gives the published HEAD (git ls-remote https://github.com/india-law/<law>),
+    # even under a git config that would change every commit if the build read it.
+    heads = {"constitution": "9b0f145c36fe79520506dbd0afdd7c239237c34a", "rti-act": "d37ec0f38a8bb65014a5bb5db5bf0b2bc71a6473"}
+    (tmp_path / "gitconfig").write_text("[i18n]\n\tcommitEncoding = latin1\n")
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(tmp_path / "gitconfig"))
+    monkeypatch.setenv("GIT_CONFIG_SYSTEM", str(tmp_path / "gitconfig"))
     again = build(ROOT / "history" / f"{law}.yaml", tmp_path / "repo")
-    assert git(again, "rev-parse", "HEAD") == git(built[law], "rev-parse", "HEAD")
+    assert git(again, "rev-parse", "HEAD").strip() == git(built[law], "rev-parse", "HEAD").strip() == heads[law]
 
 
 def test_year_tags(built):
@@ -116,3 +122,20 @@ def test_export_refuses_out_of_order_commencement(tmp_path):
     repo = build(tmp_path / "x.yaml", tmp_path / "repo")
     with pytest.raises(SystemExit, match="out of commit order"):
         export(repo, tmp_path / "x.json")
+
+
+def test_export_of_a_placed_act(tmp_path):
+    # A silver history's placed act (enactment unknown), an empty trailer, and a note with its own link.
+    history = {"law": "x", "title": "X", "official": "https://example.invalid/x", "note": "See https://example.invalid/note",
+               "amendments": [{"act": "Act", "placed": date(2000, 1, 1), "gazette": "", "source": "https://example.invalid",
+                               "sections": [{"section": None, "in_force": None, "files": {"a.md": "# A\n"}}]}]}
+    (tmp_path / "x.yaml").write_text(yaml.safe_dump(history), encoding="utf-8")
+    data = json.loads(export(build(tmp_path / "x.yaml", tmp_path / "repo"), tmp_path / "x.json").read_text(encoding="utf-8"))
+    assert data["official"] == "https://example.invalid/x"
+    assert data["commits"][0]["enacted"] is None and data["commits"][0]["gazette"] is None
+
+
+@pytest.mark.parametrize("path", ["../a.md", "/a.md", "..\\a.md", "C:/a.md", "C:a.md"])
+def test_build_refuses_a_path_outside_the_repository(tmp_path, path):
+    with pytest.raises(SystemExit, match="bad path"):
+        write(tmp_path, path, "x")

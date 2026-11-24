@@ -8,7 +8,6 @@ Born-digital pages give their text layer. A page without one is a scan: it comes
 """
 import csv
 import io
-import os
 import re
 import shutil
 import subprocess
@@ -19,8 +18,7 @@ from pathlib import Path
 
 from pypdf import PdfReader
 
-TESSERACT = (os.environ.get("TESSERACT") or shutil.which("tesseract")
-             or r"C:\Program Files\Tesseract-OCR\tesseract.exe")
+TESSERACT = shutil.which("tesseract") or r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 PAGE_BREAK = "\f"
 SAME_LINE = 6  # points; footnote markers sit about 5 above their line, lines are about 16 apart
@@ -76,7 +74,7 @@ def gazette(page):
     def visit(chunk, cm, tm, font, size):
         if chunk.strip():
             runs.append((tm[4] * cm[0] + tm[5] * cm[2] + cm[4], tm[4] * cm[1] + tm[5] * cm[3] + cm[5],
-                         chunk.replace("\n", "").replace(chr(0xFFFD), "—")))  # some fonts lose the dash's mapping
+                         chunk.replace("\n", "")))
 
     page.extract_text(visitor_text=visit)
     if not runs:
@@ -170,7 +168,7 @@ def gazette(page):
 def ocr(page):
     """Runs (x, y, text) of a scanned page, in points, read by Tesseract from the page's JPEG: each word at the
     height of its line, so a line's words stay together and margin notes split off by position as on a digital
-    page. Tesseract is found on PATH, in $TESSERACT, or where its Windows installer puts it."""
+    page. Tesseract is found on PATH, or where its Windows installer puts it."""
     jpegs = [x.get_object() for x in page["/Resources"].get("/XObject", {}).values()
              if "/DCTDecode" in str(x.get_object().get("/Filter"))]
     if not jpegs:
@@ -192,7 +190,7 @@ def ocr(page):
 def unglue(texts):
     """Words the text layer runs together ("thecosts", "partyto", "Insection"), split where the halves stand side by
     side elsewhere in the same document at least twice, and at least twice as often as the run-together form."""
-    found = re.findall(r"[A-Za-z]+(?:-[A-Za-z]+)*", " ".join(texts))  # "co-operate" is one word, not "co operate"
+    found = re.findall(r"[A-Za-z]+(?:-\s*[A-Za-z]+)*", " ".join(texts))  # "co-operate", "sub-" / "section": one word
     words = Counter(w.lower() for w in found)
     pairs = Counter(f"{a} {b}".lower() for a, b in zip(found, found[1:]))
 
@@ -238,4 +236,6 @@ if __name__ == "__main__":
     with open(args[1], "w", encoding="utf-8", newline="\n") as f:
         f.write(PAGE_BREAK.join(texts))
     missing = scanned(texts)
-    print(f"{len(texts)} pages, {len(texts) - len(missing)} with text" + (f"; scanned: {missing}" if missing else ""))
+    unmapped = [n for n, text in enumerate(texts, 1) if chr(0xFFFD) in text]  # a glyph the font maps to no character
+    print(f"{len(texts)} pages, {len(texts) - len(missing)} with text" + (f"; scanned: {missing}" if missing else "")
+          + (f"; U+FFFD on pages {unmapped}" if unmapped else ""))

@@ -3,6 +3,5 @@ out/
 __pycache__/
 .pytest_cache/
 reader/data/
-cache/
 sources/
 *.local.md

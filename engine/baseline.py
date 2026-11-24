@@ -6,9 +6,11 @@
 `misses` lists the instructions no rule understood; the baseline never guesses.
 """
 import re
+import string
+
+from ops import ORDINALS, ROMAN, ROMANS
 
 Q = "[\"“”'‘’]"
-END_QUOTE = re.compile(rf"{Q}\s*[.;,]?(\s*and)?\s*$")
 OF_ACT = r"(?:\s+of\s+the\s+(?:principal Act|[A-Z][\w ()]*?,\s*\d{4}(?:\s*\([^)]*\))*))?"  # "of the principal Act"
 UNLABELLED = (r"(?:the\s+)?(?:(?P<nth>first|second|third|fourth)\s+)?(?P<unlabelled>proviso|Explanation)s?"
               r"(?:\s+(?P<numeral>I{1,3}|IV|[1-4])\b)?"  # "Explanation II" is the second Explanation
@@ -26,8 +28,7 @@ WORDS = r"(?:the\s+)?(?:words?|figures?|letters?|brackets?)(?:(?:,|\s+and)\s+(?:
 PLACES = (r"(?:\s*(?:(?P<every>(?:at\s+(?:both|all)\s+the\s+places\s+where|wherever)\s+(?:they|it)\s+occurs?"
           r"|occurring\s+at\s+(?:both|all)\s+the\s+places)"
           r"|(?P<last>occurring\s+at\s+the\s+end)),?)?")
-ORDINALS = "first second third fourth fifth sixth seventh eighth ninth tenth eleventh twelfth".split()
-FILE = [(r"\bthe Preamble\b", lambda m: "preamble"), (r"\barticle\s+(\d+[A-Z]*)", lambda m: f"art.{m[1]}"),
+FILE = [(r"\bthe Preamble\b", lambda m: "preamble"), (r"\b(?i:article)\s+(\d+[A-Z]*)", lambda m: f"art.{m[1]}"),
         (r"\b(?i:section)\s+(\d+)-?([A-Z]*)", lambda m: f"s.{m[1]}{m[2]}"),  # "section 54-I" is s.54I
         (rf"\b((?i:{'|'.join(ORDINALS)}))\s+Schedule\b", lambda m: f"sch.{ORDINALS.index(m[1].lower()) + 1}")]
 LOCATION = re.compile(r"(?:\bin|\boccurring\s+after)\s+"  # "in clause (a)"; "the Explanation occurring after clause (j)"
@@ -37,9 +38,9 @@ LOCATION = re.compile(r"(?:\bin|\boccurring\s+after)\s+"  # "in clause (a)"; "th
                       r"(?!\s+and\s+\()", re.I)  # "in clauses (a) and (b)" stays where it is: one rule for both
 NUMBERED = re.compile(r"\bthe Explanation\b.*?\bshall be (?:re-?)?numbered as Explanation\s+(?P<numeral>[IVX]+|\d+)\b", re.I)
 RULES = [  # (op, pattern); word rules quote inline, node rules take the block that follows the instruction
-    ("SUBSTITUTE_WORDS", rf"for {WORDS}\s*{Q}(?P<old>.+?){Q},?{PLACES}\s*{WORDS}\s*{Q}(?P<new>.+?){Q},?\s*shall be substituted"),
-    ("INSERT_WORDS", rf"(?P<position>after|before) {WORDS}\s*{Q}(?P<anchor>.+?){Q},?{PLACES}\s*{WORDS}\s*{Q}(?P<text>.+?){Q},?\s*shall be inserted"),
-    ("OMIT_WORDS", rf"{WORDS}\s*{Q}(?P<text>.+?){Q},?{PLACES}\s*shall be omitted"),
+    ("SUBSTITUTE_WORDS", rf"for {WORDS}\s*{Q}+(?P<old>.+?){Q}+,?{PLACES}\s*{WORDS}\s*{Q}+(?P<new>.+?){Q}+,?\s*shall be substituted"),
+    ("INSERT_WORDS", rf"(?P<position>after|before) {WORDS}\s*{Q}+(?P<anchor>.+?){Q}+,?{PLACES}\s*{WORDS}\s*{Q}+(?P<text>.+?){Q}+,?\s*shall be inserted"),
+    ("OMIT_WORDS", rf"{WORDS}\s*{Q}+(?P<text>.+?){Q}+,?{PLACES}\s*shall be omitted"),
     ("SUBSTITUTE_NODE", rf"\bfor\s+{NODE},?\s*the following\b.*?shall be substituted"),
     ("INSERT_NODE", rf"\b(?P<position>after|before)\s+{NODE},?\s*the following\b.*?shall be (?:inserted|added)"),
     ("OMIT_NODE", rf"(?:^|,\s*)(?:\(\w+\)\s+)?{NODE}\s+shall be omitted"),
@@ -62,7 +63,8 @@ OMIT_MANY = re.compile(rf"\b(?:(?P<kind>sub-sections|clauses|sub-clauses)\s+(?P<
                        r")(?:\s+of the principal Act)?\s+shall be omitted", re.I)
 HEADING = re.compile(rf"\bfor the marginal heading,\s+(?:the following marginal heading|the marginal heading\s+{Q}(?P<new>.+?){Q})"
                      r"\s+shall be substituted", re.I)
-NTH = {None: "", "first": "", "second": "2", "third": "3", "fourth": "4"}
+NTH = {"": "", "first": "", "i": "", "1": "", "second": "2", "ii": "2", "2": "2", "third": "3", "iii": "3", "3": "3",
+       "fourth": "4", "iv": "4", "4": "4"}  # "the second proviso", "Explanation II"
 
 
 DOUBLE, SINGLE = "(?:[\"”]|’’)", "[’']"  # a double close is sometimes typeset as two single ones: "’’."
@@ -72,21 +74,26 @@ CLOSE = {'"': DOUBLE, "“": DOUBLE, "”": DOUBLE, "'": SINGLE, "‘": SINGLE, 
 def split(text):
     """Instruction lines, each with the quoted block that follows it (or None). A block opened with a single quote
     holds terms in double quotes ('(2A) "base resolution plan" means'), so only a single quote closes it."""
-    items, block, end = [], None, END_QUOTE
+    items, block, end, curly = [], None, None, False
     for line in (l.strip() for l in text.split("\n")):
         if not line:
             continue
         if block is None and re.match(Q, line) and items:  # a quoted block opens; "‘‘" is a double quote typeset as two
-            two = line.startswith(("‘‘", "''"))
+            two, curly = line.startswith(("‘‘", "''")), line[0] == "“"
             block, end = [line[1 + two:]], re.compile(rf"{DOUBLE if two else CLOSE[line[0]]}\s*[.;,]?(\s*and)?\s*$")
         elif block is not None:
             block.append(line)
         else:
             items.append([line, None])
             continue
-        if end.search(block[-1]):  # ... and closes
+        inner = "\n".join(block)
+        closes = inner.count("”") + inner.count("’’")  # "’’" is a closing double typeset as two singles
+        if end.search(block[-1]) and (not curly or closes > inner.count("“") + inner.count("‘‘")):  # ... and closes
             block[-1] = end.sub("", block[-1])
             items[-1][1], block = "\n".join(block), None
+    if block is not None:  # never closed: the instruction it belongs to is a miss
+        items[-1][0] = f"{items[-1][0]} [quoted block not closed]"
+        items[-1][1] = None
     return items
 
 
@@ -94,44 +101,52 @@ def suffix(g):
     """A target's last step: "(4)", or "/proviso2" for "the second proviso"."""
     if g.get("unlabelled"):
         of = f"({g['of']})" if g.get("of") else ""
-        n = {"I": "", "1": "", "II": "2", "2": "2", "III": "3", "3": "3", "IV": "4", "4": "4"}.get(g.get("numeral") or "")
-        return f"{of}/{g['unlabelled'].lower()}{n if n is not None else NTH[(g.get('nth') or '').lower() or None]}"
+        return f"{of}/{g['unlabelled'].lower()}{NTH[(g.get('numeral') or g.get('nth') or '').lower()]}"
     if g.get("heading"):
         return "/heading"
     return f"({g.get('label') or g['bare']})"
 
 
+SEQUENCES = [ROMANS, [str(n) for n in range(1, 500)], list(string.ascii_lowercase), list(string.ascii_uppercase)]
+
+
 def labels(text):
-    """The labels a list names: "(3), (4) and (6)"; "(11) to (14)" is every number between."""
-    found = re.findall(r"\((\w+)\)", text)
-    if (m := re.fullmatch(r"\((\d+)\)\s+to\s+\((\d+)\)", text.strip())):
-        return [str(n) for n in range(int(m[1]), int(m[2]) + 1)]
-    return found
+    """The labels a list names: "(3), (4) and (6)"; "(11) to (14)" and "(a) to (d)" are every label between. None
+    for a range it can't count ("(2A) to (2D)"), so the instruction is a miss, not half applied."""
+    out = []
+    for a, b in re.findall(r"\((\w+)\)(?:\s+to\s+\((\w+)\))?", text):
+        seq = next((s for s in SEQUENCES if a in s and b in s and s.index(a) < s.index(b)), None) if b else [a]
+        if seq is None:
+            return None
+        out += seq[seq.index(a):seq.index(b) + 1] if b else seq
+    return out
 
 
-def list_kind(line):
-    """The kind of the label an instruction starts with, "(a) in sub-section (1),—": siblings share a kind."""
+def list_kind(line, last=None):
+    """The kind of the label an instruction starts with, "(a) in sub-section (1),—": siblings share a kind. (i)
+    after (h), the last letter seen, is a letter."""
     m = re.match(r"\((\w+)\)\s", line)
     if not m:
         return None
     label = m[1]
     return ("num" if label[0].isdigit()
-            else "Roman" if re.fullmatch(r"(?=[IVX])X{0,3}(IX|IV|V?I{0,3})", label)  # "(I) in clause (j)" holds "(A)"
+            else "Roman" if ROMAN.match(label.lower()) and label.isupper()  # "(I) in clause (j)" holds "(A)"
             else "upper" if label.isupper()
-            else "roman" if re.fullmatch(r"(?=[ivx])x{0,3}(ix|iv|v?i{0,3})", label) else "alpha")
+            else "roman" if ROMAN.match(label) and not (last and ord(label[0]) == ord(last) + 1 and len(label) == 1)
+            else "alpha")
 
 
 def baseline(text):
-    ops, misses, file, context = [], [], None, []  # context: [(list kind, location)] of the lines above
+    ops, misses, file, context, last = [], [], None, [], None  # context: [(list kind, location)] of the lines above
     for line, block in split(text):
-        bare = re.sub(r"[“\"][^”\"]*[”\"]|‘‘.*?’’", "", line)  # not "[See section 11 (14)]" in the Fourth Schedule
-        for pattern, make in FILE:
-            if not file and (m := re.search(pattern, bare)):
-                file = make(m)
-        kind = list_kind(line)
+        unquoted = re.sub(r"[“\"][^”\"]*[”\"]|‘‘.*?’’", "", line)  # "[See section 11 (14)]", "in clause (a)" quoted
+        start = (m.start() if (m := re.search(r"\b[Ii]n\s", unquoted)) else 0)
+        named = [(m.start(), make(m)) for pattern, make in FILE if (m := re.compile(pattern).search(unquoted, start))]
+        file = file or min(named, default=(0, None))[1]
+        kind = list_kind(line, last)
         if kind:  # a sibling replaces the context of the one before it
             context = context[:next((i for i, (k, _) in enumerate(context) if k == kind), len(context))]
-        unquoted = re.sub(r"[“\"][^”\"]*[”\"]", "", line)  # "in clause (a)" inside quoted words isn't a location
+            last = re.match(r"\((\w+)\)", line)[1] if kind == "alpha" else last
         loc = "".join(suffix(m.groupdict()) for m in LOCATION.finditer(unquoted))
         where = f"{file}{''.join(loc for _, loc in context)}{loc}"
         found = False
@@ -150,12 +165,12 @@ def baseline(text):
             ops.append({"op": "SUBSTITUTE_WORDS", "target": where, "old": m["old"].strip(), "to": m["to"].strip(),
                         "new": " ".join(block.split())})
             continue
-        if block is not None and (m := PAIR.search(line)):  # "for sub-sections (7) and (8)": all but the first go,
-            first, *rest = labels(m["labels"])  # and the first takes the whole block
+        if block is not None and (m := PAIR.search(line)) and labels(m["labels"]):  # "for sub-sections (7) and
+            first, *rest = labels(m["labels"])  # (8)": all but the first go, and the first takes the whole block
             ops += [{"op": "OMIT_NODE", "target": f"{where}({label})"} for label in reversed(rest)]
             ops.append({"op": "SUBSTITUTE_NODE", "target": f"{where}({first})", "block": block})
             continue
-        if m := OMIT_MANY.search(unquoted):  # "sections 38, 39, 40, 41 and 42 ... shall be omitted"
+        if (m := OMIT_MANY.search(unquoted)) and (m["numbers"] or labels(m["labels"])):  # "sections 38, 39 and 42"
             ops += ([{"op": "OMIT_NODE", "target": f"s.{n}"} for n in re.findall(r"\d+[A-Z]*", m["numbers"])]
                     if m["numbers"] else
                     [{"op": "OMIT_NODE", "target": f"{where}({label})"} for label in labels(m["labels"])])
@@ -193,8 +208,8 @@ def baseline(text):
             if found:
                 break
         if not found and not renumbered:
-            if not re.search(r"shall be|namely", line, re.I):  # context only: "In section 13 of the principal Act,—"
-                context.append((kind, loc))
+            if not re.search(r"shall be|namely", line, re.I) and re.search(r"(?:^|\)\s)in\b|[—:-]$", line, re.I):
+                context.append((kind, loc))  # context only: "In section 13 of the principal Act,—"
             else:
                 misses.append(line)
     return ops, misses

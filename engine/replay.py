@@ -30,14 +30,16 @@ def replay(history_path):
     files, results = {}, []
     for n, act in enumerate(history["amendments"]):
         for sec in act["sections"]:
-            after = {**files, **{p: t if t.endswith("\n") else t + "\n" for p, t in sec["files"].items() if t is not None}}
+            after = {**files, **{p: t if t is None or t.endswith("\n") else t + "\n" for p, t in sec["files"].items()}}
+            after = {p: t for p, t in after.items() if t is not None}  # null: the file is deleted (contract 1)
             if n and sec.get("text"):  # the first entry is the Act itself, not an amendment
                 ops, misses = baseline(sec["text"])
                 try:
                     got, error = apply(files, ops), None
                 except EditError as e:
                     got, error = files, str(e)
-                match = next((lv for lv in LEVELS if all(norm(got[p], lv) == norm(after[p], lv) for p in sec["files"])), None)
+                match = next((lv for lv in LEVELS if got.keys() == after.keys()  # every file, not only those listed:
+                              and all(norm(got[p], lv) == norm(after[p], lv) for p in after)), None)  # nothing else moved
                 results.append({"amendment": act["act"] + (f", s. {sec['section']}" if sec.get("section") else ""),
                                 "ops": ops, "misses": misses, "error": error, "match": match})
             files = after

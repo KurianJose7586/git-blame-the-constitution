@@ -29,7 +29,7 @@ Acceptance criteria for each one are in [DELIVERABLES.md](DELIVERABLES.md).
 
 ## Status
 
-M0 in progress. KICKOFF.md tasks T1–T9 are done: the Constitution's Preamble and Article 15, and the whole Right to Information Act, 2005 (14 commits, including seven Second Schedule notifications up to CERT-In in 2023), build into git repositories whose blame matches the official footnotes. They're public, and reader v0 reads, blames and diffs them on any date. Left for the M0 gate: the hand checks in [notes/m0-gate.md](notes/m0-gate.md).
+M0's public part is done (KICKOFF.md tasks T1–T9): the Constitution's Preamble and Article 15, and the whole Right to Information Act, 2005 (14 commits, including seven Second Schedule notifications up to CERT-In in 2023), build into git repositories whose blame matches the official footnotes. They're public, and reader v0 reads, blames and diffs them on any date. Left for the M0 gate: the hand checks in [notes/m0-gate.md](notes/m0-gate.md).
 
 - Reader: https://kurianjose7586.github.io/git-blame-the-constitution/
 - [india-law/constitution](https://github.com/india-law/constitution) ([blame on Article 15](https://github.com/india-law/constitution/blame/main/part-iii/article-015.md))
@@ -47,13 +47,13 @@ python -m http.server 8123 --directory reader
 
 The same two commands work for `constitution`.
 
-M1 has started: the edit operations and executor (`engine/ops.py`), a first regex baseline (`engine/baseline.py`), and a replay of M0's history through both, which reproduces 12 of its 16 amendments exactly and 15 word for word ([notes/results.md](notes/results.md)):
+M1 is done, its gate met on "every difference explained" ([notes/results.md](notes/results.md)). It built the edit operations and executor (`engine/ops.py`), a regex baseline (`engine/baseline.py`), and a replay of M0's history through both, which reproduces 12 of its 16 amendments exactly and 15 word for word:
 
 ```
 uv run engine/replay.py history/constitution.yaml history/rti-act.yaml
 ```
 
-The whole current Constitution (the Preamble, 471 articles and the 12 Schedules) now parses from the Legislative Department's PDF into law files, with each of its 772 footnotes linked to the lines it covers and the amendment that made them. Every file's words match the source, and the Preamble and Article 15 come out identical to M0's hand-built files. From those footnotes, `engine/rebuild.py` rebuilds a silver history of the whole Constitution, 441 commits back to 1950, which replays forwards to exactly today's text; `git blame` works on every line. The same parser, with `--act`, reproduces M0's RTI Act. All of this stays local until the permission requested under T10 arrives:
+The whole current Constitution (the Preamble, 471 articles and the 12 Schedules) now parses from the Legislative Department's PDF into law files, with each of its 773 footnotes linked to the lines it covers and the amendment that made them. Every file's words match the source, the articles match the Constitution's own list of contents, and the Preamble and Article 15 come out identical to M0's hand-built files. From those footnotes, `engine/rebuild.py` rebuilds a silver history of the whole Constitution, 443 commits back to 1950; `git blame` works on every line, and its 1950 text is checked against M0's Article 15 and Preamble. The same parser, with `--act`, reproduces M0's RTI Act. All of this stays local until the permission requested under T10 arrives:
 
 ```
 uv run ingest/pdf.py sources/coi-2026-09-10.pdf out/coi.txt
@@ -61,6 +61,15 @@ uv run engine/constitution.py out/coi.txt out/constitution-current
 uv run engine/rebuild.py out/coi.txt out/constitution-silver.yaml
 uv run publish/build_repo.py out/constitution-silver.yaml out/constitution-silver
 ```
+
+T18 then rebuilt three more Acts from their amendments and checked them against official consolidations: the Insolvency and Bankruptcy Code to 2021, POCSO to 2019 and the Arbitration and Conciliation Act to 2021, every difference explained. M2 ([M2.md](M2.md)) has started: those replays give 75 checked examples of amending text and the edit operations it makes. From the downloads in `sources/` (hashes in `notes/sources.sha256`):
+
+```
+uv run model/build-replays.py
+sh model/build-silver.sh
+```
+
+An audit on 24 Nov ([notes/audit-2026-11-24.md](notes/audit-2026-11-24.md)) found errors that gave wrong text without an error in the parser, the rebuild, the executor and the reader; they're fixed and tested, and `notes/results.md` restates the numbers they changed.
 
 Tests: `uv run pytest` and `node --test reader/app.test.mjs`.
 

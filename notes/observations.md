@@ -157,3 +157,10 @@ Things noticed along the way: bugs, contradictions, surprises, dead ends. Append
 - **Consolidations follow commencement; the replay follows enactment.** The 2019 Arbitration Act's ss. 2, 3 and 14 aren't in force, so India Code's text doesn't have them, and its Part IA is shown from 12 Oct 2023. Checking a replay against a consolidation needs each provision's commencement, which the amending Act alone doesn't give (it says "on such date as the Central Government may ... appoint").
 - **Three wrong edits applied without an error in one day,** all of them a new unit read as text to add: an amendment of an amending Act read as one of the principal Act (s.26 deleted), the Eighth Schedule appended to the Seventh, the Fourth to Seventh appended to the Third. A block that opens with "THE ... SCHEDULE", "PART" or "CHAPTER" is a unit of its own; T25's verifier can check that ADD_AT_END never adds one.
 - **WIPO Lex's copy of India Code's text drops the dash after a heading** in most of Part IA ("43A. Definitions. In this Part"), so the sections run together when parsed.
+
+## 2026-11-24: What the audit's fixes turned up
+
+- **A parse can be right word for word and wrong in shape.** Arts. 124B and 124C (headings ending ".––") were glued into art. 124A, and art. 371-I into 371H, with every word in place, so E1 passed. Only the Constitution's own list of contents caught them. Every new Act's parse should be checked against its arrangement of sections.
+- **A footnote's marker can be on the page before its note.** The Tenth Schedule's para 8(3) ended with "* Paragraph 7 declared invalid ...", a note printed with no marker on its page.
+- **The extractor's word-splitting can be wrong where the Gazette is.** The IBC's 2016 Gazette prints "alongwith" as one word in s.5(8); the rule that splits glued words, written for other pages, splits it.
+- **Gazette texts' quotes don't balance.** The 2015 Arbitration Act has 52 opening and 48 closing curly double quotes, partly because some closings are typeset as two single ones ("’’"). Counting quotes to find where a block ends has to count those too, and can't be trusted to tell a quoted "1." from a new section.

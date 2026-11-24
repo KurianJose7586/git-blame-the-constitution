@@ -8,35 +8,43 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+      - run: uv run --locked pytest -q -rs
+      - run: node --test reader/app.test.mjs
+      - name: Build the laws, check them against the published law repositories, and export the reader's data
+        run: |
+          for history in history/*.yaml; do
+            law=$(basename "$history" .yaml)
+            uv run --locked publish/build_repo.py "$history" "out/$law"
+            uv run --locked publish/export.py "out/$law" "reader/data/$law.json"
+            built=$(git -C "out/$law" rev-parse HEAD)
+            pushed=$(git ls-remote "https://github.com/india-law/$law" refs/heads/main | cut -f1)
+            [ "$built" = "$pushed" ] || { echo "::error::$law: built $built, but india-law/$law is at $pushed"; exit 1; }
+          done
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+        with:
+          path: reader
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
-      - run: uv run pytest -q
-      - run: node --test reader/app.test.mjs
-      - name: Build the laws and export the reader's data
-        run: |
-          for history in history/*.yaml; do
-            law=$(basename "$history" .yaml)
-            uv run publish/build_repo.py "$history" "out/$law"
-            uv run publish/export.py "out/$law" "reader/data/$law.json"
-            echo "$law HEAD $(git -C "out/$law" rev-parse HEAD)"  # must match the pushed law repository
-          done
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: reader
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5

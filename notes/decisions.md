@@ -29,7 +29,7 @@ Why things are the way they are, including the ones that were reversed. PLAN.md 
 - **Blame shows the current text only.** Blame as of an earlier date is cheap (`git blame <sha>`), but nothing needs it before the M3 reader.
 - **The date picks a whole-file snapshot, not a replay.** `export.py` refuses a law where a file's in-force dates run out of commit order, so the shortcut can't silently show text early. M1's edit operations lift the limit.
 - **`export.py` also writes `laws.json`,** the list of laws for the home page, from whatever law JSON sits beside it.
-- **No framework or build step.** Plain ES module, one HTML file with inline CSS, jsdiff 5.2.0 from jsDelivr for word diffs. `reader/package.json` only tells Node that `app.js` is a module, for the tests. The jsdiff tag has no integrity hash yet: add one before the public launch.
+- **No framework or build step.** Plain ES module, one HTML file with inline CSS, jsdiff 5.2.0 from jsDelivr for word diffs. `reader/package.json` only tells Node that `app.js` is a module, for the tests. The jsdiff tag carries its integrity hash (added before the launch).
 - **The slider re-renders on release (`change`), not while dragging,** because re-rendering replaces the slider mid-drag.
 
 ## 2026-11-21: The RTI Act (T7)
@@ -145,7 +145,7 @@ API Setu's consumer sign-up (Partners portal, "Organization set-up") requires an
 - **The IBC's sources are IBBI's copies.** IBBI publishes the Code, every amending Act and a consolidated Code after each one; its terms of use are a disclaimer and its copyright policy is empty. Downloaded with your approval, 16 files, into `sources/ibc/` (git-ignored). The ordinance-stage consolidations are skipped: each ordinance was replaced by an Act.
 - **IBBI's consolidated copies are the comparison at every step, not only at the end:** 17 Aug 2018, 6 Aug 2019, 13 and 18 Mar 2020, 23 Sep 2020, 12 Aug 2021. Nothing from them is published.
 - **Margin notes go where a consolidated text has them:** the heading run into its section ("2. Application.—"), as the parser already reads DoPT's RTI text, and an Act's number after its name, as M0's RTI files have it ("(19 of 1923)").
-- **The text layer is kept as it is, except for typesetting:** "( 5)" becomes "(5)" and U+FFFD becomes a dash. Words run together in the PDF ("thecosts") stay run together; splitting them would need a dictionary and could be wrong.
+- **The text layer is kept as it is, except for typesetting:** "( 5)" becomes "(5)". An unknown glyph (U+FFFD) isn't guessed at: the pages that have one are reported (audit, 24 Nov; none of the 28 PDFs has one). Words run together in the PDF ("thecosts") stay run together; splitting them would need a dictionary and could be wrong.
 - **`--gazette` is a mode of `ingest/pdf.py`, not a new file.** The parser needed one change: in act mode, a Part's title stops at "CHAPTER I".
 
 ## 2026-11-22 (night): T18's replay
@@ -155,7 +155,7 @@ API Setu's consumer sign-up (Partners portal, "Organization set-up") requires an
 - **A whole section is a file:** INSERT_NODE, SUBSTITUTE_NODE and OMIT_NODE on `s.29` add a file beside it, replace it, or delete it; a block starting "CHAPTER" adds a Chapter folder with its README. `/heading` targets a section's heading ("in the marginal heading").
 - **"The Explanation" of a provision is found inside it when it is the only one,** because contract 2 nests a closing Explanation under the last clause. The same for a proviso. Contract 2 still can't nest a provision under an Explanation; that waits for the contract to change.
 - **The comparison counts a difference against the replay only if the 2016 text didn't already have it** against the same consolidation. The Gazette wins on words, as decided on 21 Nov, so IBBI departing from an amending Act is listed, not fixed.
-- **Scans are read with Tesseract** (installed on this machine; `$TESSERACT` or PATH elsewhere), through the same margin layout as digital pages. OCR text isn't trusted for quoted words.
+- **Scans are read with Tesseract** (installed on this machine; on PATH elsewhere), through the same margin layout as digital pages. OCR text isn't trusted for quoted words.
 
 ## 2026-11-23 (night): T18, the rest of the IBC
 
@@ -194,3 +194,12 @@ API Setu's consumer sign-up (Partners portal, "Organization set-up") requires an
 - **Silver needs the changed files to be there at the next consolidation:** a Schedule inserted in 2019 and omitted in 2021 was checked by nothing.
 - **Comparisons with parsed law files are word by word,** like comparisons with text.
 - **"The opening portion" and omitting a Chapter wait for an Act that has them** (M2.md listed them for T19).
+
+## 2026-11-24: After the audit
+
+- **The executor checks every operation against `ops.schema.json`,** which is now the only list of operations and their fields. A field the schema doesn't give an operation is refused, not ignored.
+- **A target two provisions share is refused,** not resolved to the first: Schedules repeat their labels.
+- **The baseline records a miss rather than half-apply:** a label range it can't count, and a quoted block that never closes.
+- **Silver and unchecked examples are written to separate files.**
+- **M2.md's decisions 3 to 6 are revised** as the audit proposed (2.1 to 2.4): the gate's "non-formulaic" is the readers' blind label, not the baseline's failure; everything is scored on the law it produces; the baseline's commit is frozen with IndiaAmend-200; silver needs the provision in force at the check. They're the plan's defaults until you change them.
+- **`model/build-replays.py` makes `out/` from `sources/`,** and `notes/sources.sha256` pins the sources. `sources/` itself still has one copy, on this laptop.

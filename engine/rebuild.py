@@ -21,13 +21,15 @@ from pathlib import Path, PurePosixPath
 import yaml
 
 import constitution as C
-from footnotes import parse as read_note
+from footnotes import COMPOUND, parse as read_note
 
 ROOT = Path(__file__).resolve().parents[1]
 CHANGES = {"inserted", "added", "substituted", "omitted", "relettered", "renumbered", "amended"}
+# not changes to this text: one not in force ("shall stand substituted"), or one that applies only in some States
+# ("Paragraph 4 has been amended in its application to the State of Assam")
+ELSEWHERE = re.compile(r"shall stand|amended (?:in|to) its application")
 LEAD = re.compile(r"^(?:\d+[A-Z]*\.\s|\(\w+\)\s)")  # a number or label a placeholder keeps: "239. ", "(2) "
-COMPOUND = re.compile(r"(?:\band\s+(?:further\s+|subsequently\s+|then\s+)?|This amendment was\s+|subsequently\s+)"
-                      r"(?=(?:subs|ins|omitted|re-?numbered|re-?lettered|added)\b)", re.I)
+RELABEL = re.compile("(?:[\x02\x04\x05][^\x03]*\x03|\\s)*(\\(\\w+\\)|\\d+[A-Z]*\\.|\\[before [^\\]]*\\])")  # "(4)", "9."
 OMITTED_ARTICLE = re.compile(r"^\W*\[?(\d+)([A-Z]*)\.\s*\[?(.*?)\.?\]?\.?\s*—\s*(.*)$", re.S)
 
 
@@ -47,6 +49,7 @@ class Text:
         self.order = {path: [(path, n) for n in range(1, text.count("\n") + 1)] for path, text in files.items()}
         self.shown = {(path, n): line for path, text in files.items() for n, line in enumerate(text.split("\n")[:-1], 1)}
         self.src = {(path, n): source for path, n, source in trail if path}
+        self.pos = {(path, n): i for i, (path, n, _) in enumerate(trail) if path}  # where each line is in the trail
         self.added = 0
 
     def files(self):
@@ -66,7 +69,7 @@ class Text:
         """A new source for a line, shown in the line's old format ("  - ", "# ", "*Provided that*")."""
         old = self.shown[uid]
         prefix = re.match(r"^(?:# |\s*- )?", old)[0]
-        body = " ".join(C.OMISSION.sub("", C.flat(source)).split())
+        body = C.words(source)
         if old[len(prefix):].startswith("*"):
             body = re.sub(r"^(Provided(?: further| also)? that|Explanation)", r"*\1*", body)
         self.src[uid], self.shown[uid] = source, prefix + body
@@ -129,12 +132,18 @@ def undo(text, fid, note, covers, aside):
         for first, start, last, end in reversed(pairs):
             if not text.alive(first) or not text.alive(last):
                 continue
+            label = RELABEL.match(text.src[first], start.end())
+            if kind in ("renumbered", "relettered") and label:  # only the label changed: "2[(4) The power ...]"
+                source = text.src[first]
+                text.set(first, source[:label.start(1)] + (old or placeholder(note)) + source[label.end(1):])
+                continue
             stop = end.start() if end else len(text.src[last])
             inside = C.flat(text.src[first][start.end():stop if first == last else None])
             keep = "" if old or not LEAD.match(inside) else LEAD.match(inside)[0]
             tail = text.src[last][stop:]  # the closing token stays, for the other half of a compound note
             text.set(first, text.src[first][:start.end()] + keep + (old or placeholder(note)) + tail)
-            for uid in between(lines, first, last):
+            restored = [uid for uid, n in text.pos.items() if uid[0] == "+" and text.pos[first] < n < text.pos[last]]
+            for uid in between(lines, first, last) + restored:  # and clauses put back inside it: art. 240's "(f)"
                 text.drop(uid)
     elif kind == "omitted" and labels:
         return restore(text, fid, note, labels, aside)
@@ -178,8 +187,8 @@ def remove(text, fid, lines):
 def restore(text, fid, note, labels, aside):
     """Undo the omission of something with no file: a clause ("(f)* * * * *") or a Part."""
     done = "lost"
-    for label in labels:
-        for source, path, after in aside.get(("unit", label), []):
+    for label in dict.fromkeys(labels):  # a note on two clauses of an article covers the article twice
+        for source, path, n in aside.get(("unit", label), []):
             if fid not in {f for _, f in C.TOKEN.findall(source)}:
                 continue
             words = note.get("old") or placeholder(note)
@@ -190,21 +199,25 @@ def restore(text, fid, note, labels, aside):
                 text.add(f"{folder}/README.md", None, "", "")
                 text.add(f"{folder}/README.md", None, "", title or words)
                 aside.setdefault(label, []).append(f"{folder}/README.md")
-            elif m := C.LABEL.match(C.flat(source)):
-                prefix = re.match(r"^\s*- ", text.shown.get(after, "")) if after else None
-                uid = text.add(path, after, prefix[0] if prefix else "- ", f"{C.OPEN}{fid}{C.END}{m[0]} {words}{C.CLOSE}{fid}{C.END}")
+            elif m := C.LABEL.match(C.flat(source)):  # back before the first line that followed it in the document
+                uids = text.order.get(path, [])
+                k = next((i for i, uid in enumerate(uids) if text.pos.get(uid, -1) > n), len(uids))
+                prefix = re.match(r"^\s*- ", text.shown[uids[k - 1]]) if k else None
+                uid = text.add(path, uids[k - 1] if k else None, prefix[0] if prefix else "- ",
+                               f"{C.OPEN}{fid}{C.END}{m[0]} {words}{C.CLOSE}{fid}{C.END}")
+                text.pos[uid] = n
                 aside.setdefault(("lines", fid), []).append(uid)
             done = "restored" if note.get("old") else "placeholder"
     return done
 
 
-def unit_file(label, source, path):
-    """An omitted article, rebuilt as a file next to the article before it: (path, heading source, its note)."""
+def unit_file(label, source, path, kind):
+    """An omitted article or section, rebuilt as a file next to the one before it: (path, heading source, its note)."""
     m = OMITTED_ARTICLE.match(C.flat(source))
     if not m or not path:
         return None
     number, letters, heading, body = m.groups()
-    return (str(PurePosixPath(path).parent / f"article-{int(number):03d}{letters.lower()}.md"),
+    return (str(PurePosixPath(path).parent / f"{kind}-{int(number):03d}{letters.lower()}.md"),
             f"{number}{letters}. {heading.strip('[] ')}.", body)
 
 
@@ -212,23 +225,28 @@ def unit_file(label, source, path):
 
 def events(provenance, trail):
     """Every change to undo: (id, note, covers, document position, nesting depth), and each footnote's enclosing
-    footnotes: a change inside another's brackets was made after it, whatever the dates say."""
+    footnotes: a change inside another's brackets was made after it, whatever the dates say. Not when both brackets
+    open at the same place ("3[4[15.]": which came first can't be told), or the outer one only renumbered."""
     depth, position, stack, parents = {}, {}, [], {}
     for n, (_, _, source) in enumerate(trail):
-        for kind, fid in C.TOKEN.findall(source):
+        together, at = set(), None  # brackets opened right before this marker, with nothing between
+        for m in C.TOKEN.finditer(source):
+            kind, fid = m[1], m[2]
+            together = together if m.start() == at else set()
             position.setdefault(fid, n)
             if kind != C.CLOSE:
-                parents.setdefault(fid, set()).update(f for f in stack if f != fid)
+                parents.setdefault(fid, set()).update(f for f in stack if f != fid and f not in together
+                                                       and provenance.get(f, {}).get("kind") not in ("renumbered", "relettered"))
             if kind == C.OPEN:
                 depth[fid] = len(stack)
                 stack.append(fid)
+                together.add(fid)
             elif kind == C.CLOSE and fid in stack:
                 stack.remove(fid)
+            at = m.end()
     out, last_second = [], None
     for fid, note in provenance.items():
-        # not changes to this text: one not in force ("shall stand substituted"), or one that applies only in some
-        # States ("Paragraph 4 has been amended in its application to the State of Assam")
-        if note["kind"] in CHANGES and note["instrument"] and not re.search(r"shall stand|amended (?:in|to) its application", note["text"]):
+        if note["kind"] in CHANGES and note["instrument"] and not ELSEWHERE.search(note["text"]):
             out.append((fid, note, note["covers"], position.get(fid, 0), depth.get(fid, 0)))
             then = COMPOUND.split(note["text"], 1)
             second = read_note(then[1]) if len(then) > 1 else None
@@ -247,12 +265,11 @@ def events(provenance, trail):
 
 def when(group, notes):
     """Where a group of changes goes in time: its in-force date, else its instrument's earliest, else its year."""
-    instrument = group[0]
     dated = [n["wef"] for n in notes if n["wef"]]
     if dated:
-        return date.fromisoformat(min(dated)), False
-    year = re.search(r"\b(1[89]\d\d|20\d\d)\b", instrument)
-    return date(int(year[1]) if year else 1950, 1, 1), True
+        return date.fromisoformat(min(dated))
+    year = re.search(r"\b(1[89]\d\d|20\d\d)\b", group[0])
+    return date(int(year[1]) if year else 1950, 1, 1)
 
 
 def after_enclosing(order, groups, parents):
@@ -269,15 +286,18 @@ def after_enclosing(order, groups, parents):
     return out
 
 
-def rebuild(files, provenance, trail, official):
+def rebuild(files, provenance, trail, official, act="The Constitution of India", enacted=date(1949, 11, 26),
+            in_force=date(1950, 1, 26)):
+    """(amendments, report): the history of `act`, whose first entry is its text as enacted, rebuilt."""
     text = Text(files, trail)
-    aside = {}  # ("unit", label) -> [(source, path of the line before, that line's ID)]; label -> rebuilt paths
-    last_placed = None
-    for path, number, source in trail:
+    aside = {}  # ("unit", label) -> [(source, path of the line before, its place in the trail)]; label -> rebuilt paths
+    last_path = None
+    for n, (path, number, source) in enumerate(trail):
         if path:
-            last_placed = (path, number)
+            last_path = path
         else:
-            aside.setdefault(("unit", number), []).append((source, last_placed[0] if last_placed else None, last_placed))
+            aside.setdefault(("unit", number), []).append((source, last_path, n))
+    kind = "section" if any(re.search(r"(?:^|/)section-", p) for p in files) else "article"
 
     groups, (changes, parents) = {}, events(provenance, trail)
     for event in changes:
@@ -291,15 +311,17 @@ def rebuild(files, provenance, trail, official):
     for group, es in groups.items():
         notes = [e[1] for e in es]
         own = any(n["wef"] for n in notes)
-        day, guessed = when(group, notes) if own else placed[group[0]]
+        day = when(group, notes) if own else placed[group[0]]
         section = group[1] or ""
-        year = re.search(r"\b(1[89]\d\d|20\d\d)\b", group[0])  # same day: the later Act, then the inner change
-        deepest = max(e[4] for e in es)
-        order.append(((day, int(year[1]) if year else 0, deepest, group[0], int(re.match(r"\d*", section)[0] or 0),
+        year = re.search(r"\b(1[89]\d\d|20\d\d)\b", group[0])  # same day: the later Act, each Act's sections together,
+        deepest = max(e[4] for e in es)                              # then the inner change
+        order.append(((day, int(year[1]) if year else 0, group[0], deepest, int(re.match(r"\d*", section)[0] or 0),
                        section), group, not own))
     order = after_enclosing(sorted(order), groups, parents)
 
-    report = {"undone": {}, "lost": [], "no_change": []}
+    lost = [f"{fid}: {n['text'][:120]}" for fid, n in provenance.items()  # "Rep. by", or an instrument not understood
+            if n["kind"] and (n["kind"] not in CHANGES or not n["instrument"]) and not ELSEWHERE.search(n["text"])]
+    report = {"undone": {}, "lost": lost, "no_change": []}
     commits, latest = [], {}
     for n, ((day, *_), group, _) in enumerate(order):  # placed in order, never before the commit before it
         latest[group] = max(day, latest[order[n - 1][1]]) if n else day
@@ -309,7 +331,7 @@ def rebuild(files, provenance, trail, official):
             if fid.startswith("text:"):
                 label = fid[5:]
                 source, path, _ = aside[("unit", label)][0]
-                rebuilt = unit_file(label, source, path)
+                rebuilt = unit_file(label, source, path, kind)
                 if rebuilt:
                     new_path, heading, _ = rebuilt
                     text.add(new_path, None, "# ", heading)
@@ -323,7 +345,7 @@ def rebuild(files, provenance, trail, official):
             if result == "lost":
                 report["lost"].append(f"{fid}: {note['text'][:120]}")
         after = text.files()
-        changed = {path: before.get(path) for path in set(before) | set(after) if before.get(path) != after.get(path)}
+        changed = {path: before.get(path) for path in sorted(set(before) | set(after)) if before.get(path) != after.get(path)}
         if not changed:
             report["no_change"].append(f"{group[0]}, s. {group[1]}")
             continue
@@ -334,8 +356,8 @@ def rebuild(files, provenance, trail, official):
                         "footnotes": [n["text"] for n in notes], "files": changed})
     commits.reverse()
 
-    amendments = [{"act": "The Constitution of India", "enacted": date(1949, 11, 26), "source": official,
-                   "sections": [{"section": None, "in_force": date(1950, 1, 26), "files": text.files()}]}]
+    amendments = [{"act": act, "enacted": enacted, "source": official,
+                   "sections": [{"section": None, "in_force": in_force, "files": text.files()}]}]
     for c in commits:
         sec = {k: c[k] for k in ("section", "in_force", "retrospective", "footnotes", "files") if c[k] is not None}
         sec.setdefault("section", None)
@@ -351,7 +373,7 @@ def rebuild(files, provenance, trail, official):
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         sys.exit(__doc__)
-    pages = Path(sys.argv[1]).read_text(encoding="utf-8").split("\f")
+    pages = re.split(r"\f|\n?=====PAGE \d+=====\n", Path(sys.argv[1]).read_text(encoding="utf-8"))
     files, provenance, _, trail = C.parse(pages)
     gold = yaml.safe_load((ROOT / "history" / "constitution.yaml").read_text(encoding="utf-8"))
     amendments, report = rebuild(files, provenance, trail, gold["official"])
@@ -362,6 +384,7 @@ if __name__ == "__main__":
     yaml.add_representer(str, lambda d, v: d.represent_scalar(  # files as readable blocks
         "tag:yaml.org,2002:str", v, style="|" if "\n" in v else None), Dumper=yaml.SafeDumper)
     out = Path(sys.argv[2])
-    out.write_text(yaml.safe_dump(history, allow_unicode=True, sort_keys=False, width=1000), encoding="utf-8")
-    out.with_suffix(".report.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
+    out.write_text(yaml.safe_dump(history, allow_unicode=True, sort_keys=False, width=1000), encoding="utf-8", newline="\n")
+    out.with_suffix(".report.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8",
+                                               newline="\n")
     print(f"{report['commits']} commits; undone: {report['undone']}; no change: {len(report['no_change'])}")

@@ -39,7 +39,8 @@ def export(repo, out):
         commits.append({
             "sha": sha, "act": t["Amending-Act"], "instrument": t.get("Instrument"),
             "section": t.get("Section"), "gazette": t.get("Gazette"),
-            "enacted": t["Enacted"], "in_force": None if t["In-Force"] == "unknown" else t["In-Force"],
+            "enacted": None if t["Enacted"] == "unknown" else t["Enacted"],
+            "in_force": None if t["In-Force"] == "unknown" else t["In-Force"],
             "retrospective": t["Retrospective"] == "yes", "source": t["Source"], "text": text,
         })
         for line in git(repo, "diff-tree", "--root", "--no-commit-id", "-r", "--name-status", sha).splitlines():
@@ -65,7 +66,7 @@ def export(repo, out):
         "version": 1,
         "law": out.stem,
         "title": readme.split("\n", 1)[0].removeprefix("# "),
-        "official": re.findall(r"https?://\S+", readme)[-1],
+        "official": re.search(r"The official text is at (\S+)", readme)[1],  # not a link in the note
         "commits": commits,
         "files": files,
     }

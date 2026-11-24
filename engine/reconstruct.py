@@ -30,8 +30,10 @@ def provisions(text):
     quoted block on a line of its own, as baseline() reads them. The short title, repeal and savings, and
     amendments of other Acts are left out."""
     text = text.replace("\f", "\n")
+    if (start := text.lower().find("be it enacted")) < 0:
+        raise ValueError("no \"be it enacted\": not an Act's text (an Ordinance's needs its own reading)")
     out = []
-    for line in text[text.lower().find("be it enacted"):].split("\n")[1:]:
+    for line in text[start:].split("\n")[1:]:
         m = re.match(r"^(\d+)\.\s+(.*?)—(.*)$", line)
         if m and (not out or int(m[1]) == int(out[-1][0]) + 1):  # the first need not be 1: an Act's excerpt
             out.append([m[1], m[2], [m[3]]])
@@ -68,16 +70,22 @@ def in_order(files):
             return (0,)
         if m := re.fullmatch(r"schedule-(\d+)\.md", name):
             return (2, int(m[1]))
-        if m := re.fullmatch(r"section-(\d+)([a-z]*)\.md", name):
+        if m := re.fullmatch(r"(?:section|article)-(\d+)([a-z]*)\.md", name):
             return (1, int(m[1]), m[2], 0)
         folder = path.rsplit("/", 1)[0] + "/"  # a README: before the first section in its folder
-        first = min((key(p) for p in files if p.startswith(folder) and "section-" in p), default=(1, 10 ** 6, ""))
+        first = min((key(p) for p in files if p.startswith(folder) and re.search(r"/(?:section|article)-", "/" + p)),
+                    default=(1, 10 ** 6, ""))
         return (1, *first[1:3], folder.count("/") - 10)
     return sorted(files, key=key)
 
 
 def words(text):
     return re.findall(r"[a-z0-9]+", text.replace("—", " ").lower())
+
+
+def law_words(text):
+    """A law file's words, without its markup."""
+    return words(re.sub(r"^#+ |^\s*- |\*", "", text, flags=re.M))
 
 
 def consolidated(path):
@@ -99,21 +107,21 @@ def compare(files, path):
     the consolidated text has between two files count against the file before."""
     if Path(path).is_dir():  # law files already parsed from a consolidation: compared file by file, word by word
         theirs, differ = load(path), {}
-        for p in set(files) | set(theirs):
-            a, b = (words(re.sub(r"^#+ |^\s*- |\*", "", law.get(p, ""), flags=re.M)) for law in (files, theirs))
+        for p in sorted(set(files) | set(theirs)):
+            a, b = (law_words(law.get(p, "")) for law in (files, theirs))
             for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
                 if tag != "equal":
                     differ.setdefault(p, []).append(f"{' '.join(a[i1:i2])[:80]!r} -> {' '.join(b[j1:j2])[:80]!r}")
         return {"files": len(files), "files_same": len(set(files) - set(differ)), "differ": differ}
     ours, owner = [], []
     for p in in_order(files):
-        found = words(re.sub(r"^#+ |^\s*- |\*", "", files[p], flags=re.M))
+        found = law_words(files[p])
         ours += found
         owner += [p] * len(found)
     theirs, differ = consolidated(path), {}
     for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, ours, theirs, autojunk=False).get_opcodes():
         if tag != "equal":
-            for p in dict.fromkeys(owner[i1:i2] or owner[max(i1 - 1, 0):i1]):
+            for p in dict.fromkeys(owner[i1:i2] or owner[max(i1 - 1, 0):max(i1, 1)]):  # an insertion: the file before
                 differ.setdefault(p, []).append(f"{' '.join(ours[i1:i2])[:80]!r} -> {' '.join(theirs[j1:j2])[:80]!r}")
     return {"files": len(files), "files_same": len(set(files) - set(differ)), "differ": differ}
 
@@ -180,6 +188,6 @@ if __name__ == "__main__":
     for p, text in files.items():
         (out / p).parent.mkdir(parents=True, exist_ok=True)
         (out / p).write_text(text, encoding="utf-8", newline="\n")
-    (out / "report.json").write_text(json.dumps(report, indent=1, ensure_ascii=False), encoding="utf-8")
+    (out / "report.json").write_text(json.dumps(report, indent=1, ensure_ascii=False), encoding="utf-8", newline="\n")
     counts = {k: sum(a["outcome"] == k for a in report["amendments"]) for k in ("applied", "partly", "failed")}
     print(f"\n{len(report['amendments'])} amending provisions: " + ", ".join(f"{v} {k}" for k, v in counts.items()))

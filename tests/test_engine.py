@@ -1,13 +1,12 @@
 """M1 (KICKOFF.md T14, T16, T17): the executor, the regex baseline, and the replay of M0's hand-written history."""
 import json
 import random
-import re
 from pathlib import Path
 
 import pytest
 import yaml
 
-from ops import OPS, EditError, apply, file_id, nodes, structure
+from ops import EditError, apply, check, file_id, nodes, structure
 from replay import replay
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -115,11 +114,7 @@ def test_replay_of_m0_history():
     assert match["Notification No. G.S.R. 673(E), dated 8 July 2016"] == "words"  # likewise
     assert match["The Digital Personal Data Protection Act, 2023, s. 44(3)"] is None  # keeps the proviso DoPT drops
 
-    schema = json.loads((ROOT / "engine" / "ops.schema.json").read_text(encoding="utf-8"))
-    assert {s["properties"]["op"]["const"]: set(s["required"]) - {"op"} for s in schema["items"]["oneOf"]} == {
-        k: set(v) for k, v in OPS.items()}
-    target = re.compile(schema["$defs"]["target"]["pattern"])
-    assert all(target.match(op["target"]) for r in results for op in r["ops"])
+    assert all(check(op) is None for r in results for op in r["ops"])  # every op the baseline made fits the schema
 
 
 def test_baseline_reads_the_ibc_drafting():
@@ -209,17 +204,18 @@ def test_baseline_reads_schedules_parts_portions_and_ranges():
 def test_examples_show_the_law_and_round_trip():
     """M2.md T19: the input shows the files a provision names, line by line with IDs; targets in the output are
     those IDs, and the output applied gives the law the operations did."""
-    from examples import example, in_view, named
+    from examples import example, named
     assert named("In section 30 of the principal Act, for “section 7 or 9”, the words “sections 7, 9 and 10” "
                  "shall be substituted; the Fourth Schedule") == {"s.30", "sch.4"}
     law = {"part-iii/article-014.md": "# 14. Equality.\n\nText.\n", **F}
     ops = [{"op": "SUBSTITUTE_WORDS", "target": "art.15/proviso", "old": "wells", "new": "tanks"}]  # found by fallback
-    source, output, targets = example(law, "Amendment of article 15.", "In article 15, in the proviso, ...", ops)
+    source, output, targets, shown, after = example(law, "Amendment of article 15.", "In article 15, in the proviso, ...", ops)
     assert "art.15(2)/proviso\t  - *Provided that* nothing here applies to wells." in source
     assert "art.14\t# 14. Equality." in source and "Text." not in source.split("---")[1]  # a neighbour: its heading
     parsed = json.loads(output)
-    assert parsed[0]["target"] == "art.15(2)/proviso" and in_view(law, targets, parsed)
-    assert apply(law, parsed) == apply(law, ops)
+    assert parsed[0]["target"] == "art.15(2)/proviso" and shown and "art.15(2)/proviso" in targets
+    assert after == apply(law, parsed) == apply(law, ops)
+    assert named("in sub-section 3 of section 38, sections 40 to 42") == {"s.38", "s.40", "s.41", "s.42"}
 
 
 def test_words_that_occur_twice_need_every():
@@ -289,3 +285,86 @@ def test_roman_lists_hold_their_letters():
     assert not misses
     assert [(o["op"], o["target"]) for o in ops] == [
         ("OMIT_WORDS", "s.5(j)(i)"), ("INSERT_NODE", "s.5(j)(iii)"), ("SUBSTITUTE_WORDS", "s.5(s)")]
+
+
+PROVISOS = """# 22. Protection.
+
+- (4) No law shall authorise detention—
+  - (a) unless an Advisory Board has reported:
+  - *Provided that* nothing in this sub-clause applies; or
+  - (b) unless the person is detained under a law.
+- (5) When any person is detained—
+  - *Provided that* nothing shall apply to—
+  - (A) a bank; or
+  - (B) a company.
+- (6) More.
+"""
+
+
+def test_the_executor_refuses_rather_than_guesses():
+    """notes/audit-2026-11-24.md, E1 to E25: each of these applied a wrong edit without an error, or refused a
+    right one."""
+    law = {"part-iii/article-022.md": PROVISOS}
+    one = lambda op: apply(law, [op])["part-iii/article-022.md"]  # noqa: E731
+    got = one({"op": "OMIT_NODE", "target": "art.22(4)/proviso"})  # E1: a proviso to (a) printed before (b)
+    assert "(b) unless the person" in got and "nothing in this sub-clause" not in got
+    got = one({"op": "INSERT_NODE", "target": "art.22(5)/proviso", "position": "after", "block": "Provided further that x."})
+    assert got.index("(B) a company.") < got.index("*Provided further that* x.") < got.index("(6)")  # E13
+    got = one({"op": "INSERT_WORDS", "target": "art.22(5)(A)", "position": "after", "anchor": "bank", "text": ", a fund"})
+    assert "a bank, a fund; or" in got  # E8
+    assert "a bank or" not in one({"op": "OMIT_WORDS", "target": "art.22(5)(A)", "text": "; or"})  # E15
+    for bad in ({"op": "INSERT_WORDS", "target": "art.22(6)", "position": "after", "anchor": "More", "text": "x",
+                 "to": "y"},  # E10: "to" isn't an INSERT_WORDS field
+                {"op": "OMIT_WORDS", "target": "art.22", "text": "a", "every": True, "last": True},  # E20
+                {"op": "OMIT_WORDS", "target": "art.22", "text": "a", "every": "false"},
+                {"op": "SUBSTITUTE_WORDS", "target": "art.22", "old": "", "new": "x"},
+                {"op": "SUBSTITUTE_WORDS", "target": "art.22(6)", "old": "More", "new": "x\n- (7) y"},
+                {"op": "OMIT_NODE", "target": "art.22/proviso1"},  # E24
+                {"op": "RENUMBER", "target": "art.22/heading", "label": "7"}):  # E14
+        with pytest.raises(EditError):
+            one(bad)
+    with pytest.raises(EditError, match="2 provisions"):  # E6: a Schedule that repeats its labels
+        apply({"schedule-2.md": "# SECOND SCHEDULE\n\n- (a) one\n- PART B\n- (a) two\n"},
+              [{"op": "OMIT_NODE", "target": "sch.2(a)"}])
+    with pytest.raises(EditError, match="not found"):  # E7: (10)'s proviso isn't (1)'s
+        apply({"section-005.md": "# 5. X.\n\n- (1) One.\n- (10) Ten.\n  - *Provided that* y.\n"},
+              [{"op": "OMIT_NODE", "target": "s.5(1)/proviso"}])
+    assert structure("12. Salaries.—\n(1) There shall be paid.\n(2) More.", schedule=True) == [  # E9
+        (0, "12. Salaries.—"), (1, "(1) There shall be paid."), (1, "(2) More.")]
+
+
+def test_whole_files_by_id():
+    """E4, E5, E25: Chapters named by their numeral, no second section with an ID that exists, articles as files."""
+    files = {"part-ii/chapter-iii/section-054.md": "# 54. X.\n\n- (1) Text.\n", "part-ii/chapter-iii/README.md": "# CHAPTER III\n\nX\n",
+             "part-ii/chapter-iv/README.md": "# CHAPTER IV\n\nY\n",
+             "part-ii/chapter-iv/section-060.md": "# 60. Y.\n\nText.\n", "part-ii/chapter-iv/section-054a.md": "# 54A. Z.\n\nT.\n"}
+    got = apply(files, [{"op": "INSERT_NODE", "target": "s.60", "position": "after", "block": "CHAPTER V TITLE\n61. New.—Text."}])
+    assert "part-ii/chapter-v/README.md" in got
+    for block in ("CHAPTER IV TITLE\n61. New.—Text.", "54A. Again.—Text."):
+        with pytest.raises(EditError, match="exists already"):
+            apply(files, [{"op": "INSERT_NODE", "target": "s.54", "position": "after", "block": block}])
+    law = {"part-iii/article-015.md": ART, "part-iii/article-031.md": "# 31. Property.\n\nText.\n"}
+    assert "part-iii/article-031.md" not in apply(law, [{"op": "OMIT_NODE", "target": "art.31"}])
+    got = apply(law, [{"op": "INSERT_NODE", "target": "art.15", "position": "after", "block": "15A. New.—Text."}])
+    assert got["part-iii/article-015a.md"] == "# 15A. New.\n\nText.\n"
+
+
+def test_baseline_misses_rather_than_half_applies():
+    """E2, E3, E11, E16, E17."""
+    from baseline import baseline
+    ops, misses = baseline("In section 5 of the principal Act, clauses (a) to (d) shall be omitted.")
+    assert [o["target"] for o in ops] == ["s.5(a)", "s.5(b)", "s.5(c)", "s.5(d)"] and not misses
+    ops, misses = baseline("In section 5 of the principal Act, clauses (2A) to (2D) shall be omitted.")
+    assert not ops and misses
+    ops, _ = baseline("In section 5 of the principal Act, after clause (z), the following clauses shall be inserted, "
+                      "namely:—\n“(za) “creditor” has the meaning given to the term “creditor”;\n"
+                      "(zb) “debt” means a liability.”.")
+    assert ops[0]["block"].endswith("(zb) “debt” means a liability.")
+    ops, _ = baseline("In the Fourth Schedule, in item 2 relating to section 11, for the word “x”, the word “y” "
+                      "shall be substituted.")
+    assert ops[0]["target"] == "sch.4(2)"
+    ops, _ = baseline("In section 5, after the words ‘‘in clause (a)’’, the words ‘‘or (b)’’ shall be inserted.")
+    assert ops == [{"op": "INSERT_WORDS", "target": "s.5", "position": "after", "anchor": "in clause (a)", "text": "or (b)"}]
+    ops, _ = baseline('In section 5 of the principal Act,—\n(h) in clause (8),—\n(A) for the word "a", the word "b" '
+                      'shall be substituted;\n(i) in clause (9), for the word "c", the word "d" shall be substituted.')
+    assert [o["target"] for o in ops] == ["s.5(8)", "s.5(9)"]

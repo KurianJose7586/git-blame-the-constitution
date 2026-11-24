@@ -1,5 +1,7 @@
 """T13 and T15 (KICKOFF.md): the official consolidated Constitution parsed into law files, with its footnotes,
 and its history rebuilt backwards from them."""
+import re
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -36,6 +38,13 @@ PDF = ROOT / "sources" / "coi-2026-09-10.pdf"
     ("Subs. by C.O. 272, dated the 5-8-2019, s.2. for “Constituent Assembly” (w.e.f. 5-8-2019).",
      {"instrument": "C.O. 272"}),
     ("See the Constitution (Declaration as to Foreign States) Order, 1950 (C.O. 2).", {"kind": None}),
+    ("Ins. by the Constitution (Thirty-eighth Amendment) Act, 1975, s. 2 (with retrospective effect) and omitted by "
+     "the Constitution (Forty-fourth Amendment) Act, 1978, s. 16 (w.e.f. 20-6-1979).",  # the first change's own date
+     {"instrument": "The Constitution (Thirty-eighth Amendment) Act, 1975", "section": "2", "wef": None,
+      "retrospective": True}),
+    ("Subs. by the Constitution (Thirty-ninth Amendment) Act, 1975, s. 2 (w.e.f 10-8-1975).", {"wef": "1975-08-10"}),
+    ("Ins. by the Sixth Schedule, to the Constitution (Amendment) Act, 1988 (67 of 1988), s. 2 (w.e.f. 31-11-1988).",
+     {"instrument": "The Sixth Schedule to the Constitution (Amendment) Act, 1988", "wef": None}),  # no 31 November
 ])
 def test_footnote(text, want):
     got = parse(text)
@@ -48,6 +57,11 @@ def test_ibid_is_the_instrument_before():
                        "Ins. ibid., s. 3 (w.e.f. 1-11-1956)."])
     assert [(n["instrument"], n["section"]) for n in notes] == [
         ("The Constitution (Seventh Amendment) Act, 1956", s) for s in ("2", "2", "3")]
+    notes = parse_all(["Subs. by the Constitution (Eighty-eighth Amendment) Act, 2003, s. 3, for “articles 268 and 269” "
+                       "(not enforced) and further subs. by the Constitution (One Hundred and First Amendment) Act, "
+                       "2016, s. 10, for “articles 268, 268A and 269” (w.e.f. 16-9-2016).",
+                       "Ins. by s. 10, ibid. (w.e.f. 16-9-2016)."])  # after a compound note, its later instrument
+    assert notes[1]["instrument"] == "The Constitution (One Hundred and First Amendment) Act, 2016"
 
 
 SAMPLE = [
@@ -92,11 +106,47 @@ def test_parse_sample():
     assert report["e1"]["words_match"] == report["e1"]["files"] == 3  # two articles and the Schedule
 
 
+CLAUSES = [  # made up: two clauses omitted under one note, a renumbering, and what E1 can't see
+    "CONTENTS",
+    "THE CONSTITUTION OF INDIA\nPREAMBLE\nWE, THE PEOPLE OF INDIA, having resolved to constitute India",
+    "PART I\nTHE UNION\n5. Example.—(1) A clause.\n1(2)* * * *\n1(3)* * * *\n2[(2) The last clause.]\n"
+    "3[5A. Repealed laws.].—Omitted by the Constitution (Forty-third Amendment) Act, 1977, s. 2 (w.e.f. 13-4-1978).\n"
+    "6. Glued.–The text—\n(a)first, as printed;\n(b) second, at *four rupees.\n7. Assam.—Text of Assam.\n"
+    "7-I. Goa.—Special provision (to be\n"
+    "1. Cls. (2) and (3) omitted by the Constitution (Seventh Amendment) Act, 1956, s. 2 (w.e.f. 1-11-1956).\n"
+    "2. Cl. (4) renumbered as cl. (2) by the Constitution (Forty-fourth Amendment) Act, 1978, s. 3 (w.e.f. 1-8-1979).\n"
+    "3. Ins. by the Constitution (Forty-second Amendment) Act, 1976, s. 4 (w.e.f. 3-1-1977).\n"
+    "* Now two thousand rupees.",
+    "read with article 7).\n\n* Paragraph 7 declared invalid.",
+]
+
+
+def test_parse_what_e1_cant_see():
+    """An omitted article whose heading isn't bracketed (art. 226A), "371-I", a heading ended "–", a label glued to
+    a lowercase word, a "*" note on a lowercase word ("*four"), a "(" left open above note 1 that is body, not a side
+    note, and a "*" note whose marker is on another page: E1 passes on all of them, right or wrong."""
+    files, notes, report, _ = constitution.parse(CLAUSES)
+    assert {p: t for p, t in files.items() if "article-" in p} == {
+        "part-i/article-005.md": "# 5. Example.\n\n- (1) A clause.\n- (2) The last clause.\n",
+        "part-i/article-006.md": "# 6. Glued.\n\nThe text—\n- (a) first, as printed;\n- (b) second, at four rupees.\n",
+        "part-i/article-007.md": "# 7. Assam.\n\nText of Assam.\n",
+        "part-i/article-007i.md": "# 7-I. Goa.\n\nSpecial provision (to be read with article 7).\n",
+    }
+    assert [a["article"] for a in report["omitted_articles"]] == ["5A"] and notes["3.p*"]["covers"] == [
+        ["part-i/article-006.md", 5]]
+    assert report["pages_with_unpaired_footnotes"] == [4]  # "* Paragraph 7 ...", out of the body all the same
+
+
 @pytest.fixture(scope="session")
-def whole():
+def coi():
     if not PDF.exists():
         pytest.skip(f"{PDF.name} is not in sources/ (it isn't committed)")
-    return constitution.parse(pages(PDF))
+    return pages(PDF)
+
+
+@pytest.fixture(scope="session")
+def whole(coi):
+    return constitution.parse(coi)
 
 
 def test_whole_constitution(whole):
@@ -105,7 +155,7 @@ def test_whole_constitution(whole):
     assert e1["words_match"] == e1["files"] > 450, e1["words_differ"]
     assert report["schedules"] == 12 and "schedule-7.md" in files
     assert not e1["provisions_not_round_tripping"]
-    assert not report["pages_with_unpaired_footnotes"]
+    assert report["pages_with_unpaired_footnotes"] == [379]  # the Tenth Schedule's note on para. 7, marked a page before
     assert report["stray_closing_brackets"] <= 2  # the source's own: Sixth Schedule p. 330, Ninth Schedule p. 375
     assert fn["changes_understood"] >= 0.95 * fn["changes"], fn["not_understood"]
     assert not fn["markers_without_note"] and not fn["notes_without_marker"]
@@ -122,6 +172,21 @@ def test_whole_constitution_matches_m0(whole, tmp_path):
         line = next(n for n, text in enumerate(files[f["file"]].split("\n"), 1) if f["line"] in text)
         acts = {(n["instrument"], n["section"]) for n in notes.values() if [f["file"], line] in n["covers"]}
         assert acts == {(f["act"], str(f["section"]))}, f["line"]
+
+
+def test_articles_against_the_table_of_contents(coi, whole):
+    """E1 compares each article with its own source, so it can't see one glued to the article before (371-I) or an
+    omitted one written as live (131A). The Constitution's own table of contents can: every article it lists is a
+    file, and every one it lists in brackets is omitted."""
+    files, _, report, _ = whole
+    text = "\f".join(coi)
+    contents = text[text.index("CONTENTS"):text.index("\nSCHEDULES")]
+    listed = {(m[2] + m[3].replace("-", ""), bool(m[1]))  # "371-I.", "243Z-I.", "[226A. ...—Omitted.]"
+              for m in re.finditer(r"(?m)^\s*(\[?)(\d+)\s*([A-Z-]*)\s*\.\s*(?=[A-Z]|$)", contents)}
+    assert {n for n, gone in listed if not gone} == {
+        re.search(r"article-0*(\w+)\.md", p)[1].upper() for p in files if "article-" in p}
+    assert {n for n, gone in listed if gone} == {a["article"] for a in report["omitted_articles"]} | {
+        str(n) for n in report["article_numbers_missing"]}  # art. 238, whose Part VII is omitted whole
 
 
 def replay(amendments):
@@ -149,7 +214,6 @@ def test_rebuild_sample(tmp_path):
         "part-i/article-001.md"]  # "for cl. (2)" quotes nothing
     assert "- (a) form a new State;\n" in base["part-i/article-003.md"]  # "3[and]" came later
     assert "part-i/article-002a.md" not in base and amendments[3]["sections"][0]["files"] == {"part-i/article-002a.md": None}
-    assert replay(amendments) == files
     history = {"law": "sample", "title": "A sample", "official": "https://example.org", "note": "Silver.",
                "amendments": amendments}
     (tmp_path / "h.yaml").write_text(yaml.safe_dump(history, allow_unicode=True, sort_keys=False), encoding="utf-8")
@@ -158,16 +222,57 @@ def test_rebuild_sample(tmp_path):
     assert "Enacted: unknown" in message and "In-Force: 1975-04-26" in message and "Omitted by" in message
 
 
+def test_rebuild_omitted_clauses_and_a_renumbering():
+    """Two clauses omitted under one note come back once each, in order, where they were; undoing a renumbering
+    changes the label and keeps the clause's text."""
+    files, notes, _, trail = constitution.parse(CLAUSES)
+    amendments, _ = rebuild(files, notes, trail, "https://example.org")
+    placeholder = "[before The Constitution (Seventh Amendment) Act, 1956, s. 2: not quoted in the footnote]"
+    assert amendments[0]["sections"][0]["files"]["part-i/article-005.md"] == (
+        f"# 5. Example.\n\n- (1) A clause.\n- (2) {placeholder}\n- (3) {placeholder}\n- (4) The last clause.\n")
+    assert replay(amendments[:2])["part-i/article-005.md"] == "# 5. Example.\n\n- (1) A clause.\n- (4) The last clause.\n"
+    assert [(a["act"], list(a["sections"][0]["files"])) for a in amendments[2:4]] == [  # art. 5A, inserted, omitted
+        ("The Constitution (Forty-second Amendment) Act, 1976", ["part-i/article-005a.md"]),
+        ("The Constitution (Forty-third Amendment) Act, 1977", ["part-i/article-005a.md"])]
+
+
+def test_brackets_opened_together_say_nothing_about_order():
+    """A change inside another's brackets is placed after it. Not when both open at the same place ("3[4[15.]"):
+    which came first can't be told. Nor when the outer one only renumbered what it encloses."""
+    from rebuild import events
+    o, c, e = constitution.OPEN, constitution.CLOSE, constitution.END
+    trail = [("schedule-4.md", 3, f"{o}9.1{e}{o}9.2{e}15.{c}9.2{e} Nagaland {o}9.3{e}1{c}9.3{e}{c}9.1{e}"),
+             ("schedule-4.md", 4, f"{o}9.4{e}16. Goa {o}9.5{e}2{c}9.5{e}{c}9.4{e}")]
+    notes = {fid: {**parse(text), "covers": [["schedule-4.md", 3]]} for fid, text in (
+        ("9.1", "Ins. by the State of Nagaland Act, 1962 (27 of 1962), s. 6 (w.e.f. 1-12-1963)."),
+        ("9.2", "Entries 16 to 29 renumbered as entries 15 to 28 by the Jammu and Kashmir Reorganisation Act, 2019 "
+                "(34 of 2019), s. 8 (w.e.f. 31-10-2019)."),
+        ("9.3", "Subs. by the Nagaland Act, 1970, s. 2, for “2” (w.e.f. 1-1-1971)."),
+        ("9.4", "Entries 15 to 28 renumbered as entries 16 to 29 by the Goa Act, 1987, s. 6 (w.e.f. 30-5-1987)."),
+        ("9.5", "Subs. by the Goa Act, 2000, s. 2, for “1” (w.e.f. 1-1-2000)."))}
+    parents = events(notes, trail)[1]
+    assert (parents["9.2"], parents["9.3"], parents["9.5"]) == (set(), {"9.1"}, set())
+
+
 def test_rebuild_whole_constitution(whole):
-    """Replayed forwards, the rebuilt history gives today's text; its 1950 Article 15 is M0's, and its 1950 Preamble
-    is M0's but for the footnote's misquote of the 42nd Amendment ("Unity of the Nation")."""
+    """The rebuilt 1950 Article 15 is M0's, and its 1950 Preamble is M0's but for the footnote's misquote of the
+    42nd Amendment ("Unity of the Nation"). Omitted clauses come back where they were, a renumbered clause keeps its
+    text, and a change waits for a later one only where a table's brackets say so (notes/results.md)."""
     files, notes, _, trail = whole
     gold = yaml.safe_load((ROOT / "history" / "constitution.yaml").read_text(encoding="utf-8"))
     amendments, report = rebuild(files, notes, trail, gold["official"])
-    assert replay(amendments) == files
     base, m0 = amendments[0]["sections"][0]["files"], gold["amendments"][0]["sections"][0]["files"]
     assert base["part-iii/article-015.md"] == m0["part-iii/article-015.md"]
     assert base["preamble.md"] == m0["preamble.md"].replace("unity of the Nation", "Unity of the Nation")
+    assert ("territory of India;\n  - (f) [before The Constitution (Forty-fourth Amendment) Act, 1978, s. 2: not quoted "
+            "in the footnote]\n  - (g) to practise") in base["part-iii/article-019.md"]
+    assert re.findall(r"(?m)^- \((\d)\)", base["part-vi/chapter-v/article-214.md"]) == ["2", "3"]
+    before_44th = replay(amendments[:next(n for n, a in enumerate(amendments) if "Forty-fourth" in a["act"])])
+    assert "\n- (7) The power conferred on a High Court" in before_44th["part-vi/chapter-v/article-226.md"]
+    assert next(a["placed"] for a in amendments if "Thirty-eighth" in a["act"]).year == 1975
+    late = [(a["act"], s["section"]) for a in amendments[1:] for s in a["sections"]
+            if s.get("in_force") and a["placed"] > s["in_force"]]
+    assert len(late) <= 5, late  # the 70th Amendment on art. 239AA, and four table rows in the First and Fourth Schedules
     assert len(report["lost"]) <= 0.02 * sum(report["undone"].values()), report["lost"]
 
 
@@ -179,7 +284,6 @@ def test_act_mode_on_the_rti_act():
     purpose (the Gazette's words, notes in tests/official/rti-act/footnotes.yaml)."""
     if not RTI.exists():
         pytest.skip(f"{RTI.name} is not in sources/ (it isn't committed)")
-    import re
     files, notes, report, _ = constitution.parse(re.split(r"\f|\n?=====PAGE \d+=====\n", RTI.read_text(encoding="utf-8")),
                                                  act=True)
     assert report["e1"]["words_match"] == report["e1"]["files"] == 33
@@ -193,6 +297,25 @@ def test_act_mode_on_the_rti_act():
         "preamble.md", "chapter-ii/section-004.md", "chapter-iii/section-013.md", "chapter-iv/section-016.md",
         "schedule-2.md",  # M0 follows the Gazette: "expedient", "suo motu", no "(24 of 2019)", "thereunder", entries 8, 27
     }
+
+
+def test_act_mode_edges():
+    """A long title that isn't "An Act to" and ends the page before "BE it enacted"; a section that says only that
+    it's repealed; an omitted section rebuilt as a section, in a history that starts with the Act, not the
+    Constitution."""
+    files, notes, report, trail = constitution.parse([
+        "ARRANGEMENT OF SECTIONS\n1. Short title.\n2. Penalty.",
+        "THE EXAMPLE ACT, 2001\nAn Act further to amend the law\nrelating to examples.",
+        "BE it enacted by Parliament as follows:—\n1. Short title.—This Act may be called the Example Act, 2001.\n"
+        "2. Repealed by Act 1 of 2005.\n3. Penalty.—Whoever breaks it shall be punished.\n1[4. Fees.—A fee.]\n"
+        "5. [Old.].—Omitted by Act 3 of 2010, s. 2 (w.e.f. 1-4-2010).\n1. Ins. by Act 2 of 2008, s. 3 (w.e.f. 1-1-2009).",
+    ], act=True)
+    assert sorted(files) == ["preamble.md", "section-001.md", "section-003.md", "section-004.md"]
+    assert files["preamble.md"].startswith("An Act further to amend the law relating to examples.\n")
+    assert [a["article"] for a in report["omitted_articles"]] == ["2", "5"]
+    amendments, _ = rebuild(files, notes, trail, {}, "The Example Act, 2001", date(2001, 5, 1), None)
+    assert amendments[0]["act"] == "The Example Act, 2001" and sorted(amendments[0]["sections"][0]["files"]) == [
+        "preamble.md", "section-001.md", "section-003.md", "section-005.md"]
 
 
 IBC = ROOT / "sources" / "ibc" / "2016-05-28-ibc-2016.pdf"
@@ -265,6 +388,8 @@ def test_unglue_mends_words_the_text_layer_breaks():
     text = "the costs and the costs, thecosts; th e following, the following, the following; section 7or section 9"
     assert unglue([text]) == [
         "the costs and the costs, the costs; the following, the following, the following; section 7 or section 9"]
+    text = "sub-\nsection (1), sub-\nsection (2) and subsection (3)"  # a line break after "sub-" isn't two words
+    assert unglue([text]) == [text]
 
 
 def test_pocso_rebuilt_back_and_replayed_forward(tmp_path):
@@ -279,7 +404,8 @@ def test_pocso_rebuilt_back_and_replayed_forward(tmp_path):
     import reconstruct
     files, provenance, report, trail = constitution.parse(pages(current), act=True)
     assert report["e1"]["words_match"] == report["e1"]["files"] and not report.get("article_numbers_missing")
-    base = rebuild(files, provenance, trail, {})[0][0]["sections"][0]["files"]
+    base = rebuild(files, provenance, trail, {}, "The Protection of Children from Sexual Offences Act, 2012",
+                   date(2012, 6, 19), None)[0][0]["sections"][0]["files"]
     for name, law in (("current", files), ("base", base)):
         for path, text in law.items():
             (tmp_path / name / path).parent.mkdir(parents=True, exist_ok=True)
@@ -309,7 +435,8 @@ def test_arbitration_rebuilt_back_and_replayed_forward(tmp_path):
     import reconstruct
     files, provenance, report, trail = constitution.parse(pages(current), act=True)
     assert report["e1"]["words_match"] == report["e1"]["files"] and "section-001.md" in files
-    base = rebuild(files, provenance, trail, {})[0][0]["sections"][0]["files"]
+    base = rebuild(files, provenance, trail, {}, "The Arbitration and Conciliation Act, 1996", date(1996, 8, 16),
+                   None)[0][0]["sections"][0]["files"]
     for name, law in (("current", files), ("base", base)):
         for path, text in law.items():
             (tmp_path / name / path).parent.mkdir(parents=True, exist_ok=True)
@@ -321,7 +448,7 @@ def test_arbitration_rebuilt_back_and_replayed_forward(tmp_path):
     assert outcomes.count("applied") >= 19 and out["checks"][0]["files_same"] >= 106
     gazette = folder / "1996-08-19-arbitration-act-1996-gazette.pdf"  # the Act as gazetted: checks the rebuilt base
     if gazette.exists():
-        import difflib, re
+        import difflib
         kept = {p: t for p, t in base.items() if not re.search(r"schedule-[567]", p)}  # the 2015 Act's (see notes)
         ours = [w for p in reconstruct.in_order(kept) for w in reconstruct.words(re.sub(r"^#+ |^\s*- |\*", "", kept[p], flags=re.M))]
         text = "".join(pages(gazette))
