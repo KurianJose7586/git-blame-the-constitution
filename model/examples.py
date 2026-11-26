@@ -9,7 +9,8 @@ those IDs, so decoding can be held to them. A provision whose operations all app
 when the files it changed are still there at the next consolidation and have no new difference (decision 6; a
 Schedule inserted and omitted before any consolidation is checked by none), and it round-trips when
 its output, parsed back and applied, gives the law the replay did. Silver examples go to OUT.jsonl, the rest to
-OUT.unchecked.jsonl, so nothing trains on an unchecked example by forgetting a flag.
+OUT.unchecked.jsonl, so nothing trains on an unchecked example by forgetting a flag. Each record also carries the
+files it can touch, before and after, which eval/run.py scores a system's output against.
 """
 import json
 import re
@@ -17,11 +18,11 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "engine"))
-from ops import ORDINALS, apply_one, file_id, find, nodes  # noqa: E402
+from ops import FILE_ID, ORDINALS, apply_one, file_id, find, nodes  # noqa: E402
 from reconstruct import in_order, replay  # noqa: E402
 
 NAMED = re.compile(rf"(?<![\w-])(?i:(section|article)s?)\s+((?:\d+[A-Z]*(?:,\s*|\s+(?:and|or|to)\s+)?)+)"  # not
-                   rf"|\b((?i:{'|'.join(ORDINALS)}))\s+Schedule\b|\bthe\s+Schedule\b")  # "sub-section 3"
+                   rf"|\b((?i:{'|'.join(ORDINALS)}))\s+Schedule\b|\bthe\s+Schedule\b|\b(Preamble)\b")  # "sub-section 3"
 
 
 def named(text):
@@ -34,8 +35,16 @@ def named(text):
                 ids |= {("s." if m[1].lower() == "section" else "art.") + n
                         for n in ([str(n) for n in range(int(a), int(b) + 1)] if b and a.isdigit() else [a])}
         else:
-            ids.add(f"sch.{ORDINALS.index(m[3].lower()) + 1}" if m[3] else "sch.1")
+            ids.add("preamble" if m[4] else f"sch.{ORDINALS.index(m[3].lower()) + 1}" if m[3] else "sch.1")
     return ids
+
+
+def touchable(before, after, targets):
+    """The law an item carries for eval/run.py: the files shown and the files the gold changed, before and after.
+    A target outside them can't be applied, so it counts against validity."""
+    ids = {FILE_ID.match(t)[1] for t in targets}
+    keep = {p for p in before if file_id(p) in ids} | {p for p in before.keys() | after.keys() if before.get(p) != after.get(p)}
+    return {p: before[p] for p in sorted(keep) if p in before}, {p: after[p] for p in sorted(keep) if p in after}
 
 
 def shown(path, text):
@@ -92,11 +101,13 @@ def build(base, steps, law):
         changed = {p for p in k["before"].keys() | k["after"].keys() if k["before"].get(p) != k["after"].get(p)}
         checks = report["checks"][k["check"]:]
         source, output, targets, seen, after = example(k["before"], k["heading"], k["text"], k["ops"])
+        before_shown, after_shown = touchable(k["before"], k["after"], targets)
         records.append({"law": law, "act": k["act"], "section": k["section"],
                         "silver": bool(checks) and not changed & set(checks[0]["new_differences"])  # and still there:
                         and all(p in at_check[k["check"]] for p in changed if p in k["after"]),  # 2019's Eighth Schedule
                         "shown": seen, "round_trip": after == k["after"],
-                        "input": source, "output": output, "targets": targets})
+                        "input": source, "output": output, "targets": targets,
+                        "before": before_shown, "after": after_shown})
     return records, len(kept)
 
 

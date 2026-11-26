@@ -25,24 +25,30 @@ def norm(text, level):
     return text if level == "quotes" else " ".join(re.findall(r"[a-z0-9]+", text.lower()))
 
 
-def replay(history_path):
-    history = yaml.safe_load(Path(history_path).read_text(encoding="utf-8"))
-    files, results = {}, []
+def steps(history):
+    """(act, section, law before, law after) for each amending provision with text in a history."""
+    files = {}
     for n, act in enumerate(history["amendments"]):
         for sec in act["sections"]:
             after = {**files, **{p: t if t is None or t.endswith("\n") else t + "\n" for p, t in sec["files"].items()}}
             after = {p: t for p, t in after.items() if t is not None}  # null: the file is deleted (contract 1)
             if n and sec.get("text"):  # the first entry is the Act itself, not an amendment
-                ops, misses = baseline(sec["text"])
-                try:
-                    got, error = apply(files, ops), None
-                except EditError as e:
-                    got, error = files, str(e)
-                match = next((lv for lv in LEVELS if got.keys() == after.keys()  # every file, not only those listed:
-                              and all(norm(got[p], lv) == norm(after[p], lv) for p in after)), None)  # nothing else moved
-                results.append({"amendment": act["act"] + (f", s. {sec['section']}" if sec.get("section") else ""),
-                                "ops": ops, "misses": misses, "error": error, "match": match})
+                yield act, sec, files, after
             files = after
+
+
+def replay(history_path):
+    results = []
+    for act, sec, files, after in steps(yaml.safe_load(Path(history_path).read_text(encoding="utf-8"))):
+        ops, misses = baseline(sec["text"])
+        try:
+            got, error = apply(files, ops), None
+        except EditError as e:
+            got, error = files, str(e)
+        match = next((lv for lv in LEVELS if got.keys() == after.keys()  # every file, not only those listed:
+                      and all(norm(got[p], lv) == norm(after[p], lv) for p in after)), None)  # nothing else moved
+        results.append({"amendment": act["act"] + (f", s. {sec['section']}" if sec.get("section") else ""),
+                        "ops": ops, "misses": misses, "error": error, "match": match})
     return results
 
 

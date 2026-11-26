@@ -367,3 +367,27 @@ RTI 16 of 17, POCSO 20 of 20 and Arbitration 40 of 40 changes are understood, as
 **Reproducing it.** `uv run model/build-replays.py` rebuilds from `sources/` everything `model/build-silver.sh` reads, and the Constitution's parse and history, in 89 s. Against the `out/` the numbers above came from, it differs in one word: the IBC's 2016 Gazette prints "alongwith" (s.5(8), page 6, checked by eye), which the current extractor splits; `out/` keeps the Gazette's word. `notes/sources.sha256` records every source file's hash (`sha256sum -c notes/sources.sha256`).
 
 **M1's gate is met,** on PLAN's "every difference explained" branch: the IBC to 2021, POCSO to 2019 and the Arbitration Act to 2021 are replayed and checked against consolidations, with every difference explained (23 Nov, and above). No Act matches exactly.
+
+## 2026-11-26: T24, the evaluation harness
+
+`eval/run.py` takes any system (a function from an item's input to the JSON of operations) and scores it on the law it produces (M2.md decision 4): exact match of the files the item carries after the output is applied, the same words, validity, unintended changes (a line the gold leaves alone changed or removed), edit F1 against gold operations where an item has them, determinism over 5 runs, and seconds per item. `model/examples.py`'s records now carry those files, before and after: the files shown and the files the replay changed. M0's hand-written histories are read as items too, with no gold operations.
+
+`uv run eval/run.py regex out/examples/*.jsonl history/*.yaml --by law,silver`:
+
+| law, silver | items | exact | words | valid | unintended | edit F1 | same | s/item |
+|---|---|---|---|---|---|---|---|---|
+| arbitration True | 22 | 100% | 100% | 100% | 0% | 100% | 100% | 0.001 |
+| arbitration False | 12 | 92% | 92% | 92% | 0% | 100% | 100% | 0.001 |
+| ibc True | 46 | 100% | 100% | 100% | 0% | 100% | 100% | 0.000 |
+| ibc False | 34 | 97% | 97% | 97% | 0% | 100% | 100% | 0.000 |
+| pocso True | 7 | 100% | 100% | 100% | 0% | 100% | 100% | 0.000 |
+| pocso False | 3 | 100% | 100% | 100% | 0% | 100% | 100% | 0.000 |
+| constitution (M0) | 4 | 75% | 100% | 100% | 0% | n/a | 100% | 0.000 |
+| rti-act (M0) | 12 | 75% | 92% | 100% | 0% | n/a | 100% | 0.000 |
+| all | 140 | 96% | 98% | 99% | 0% | 100% | 100% | 0.000 |
+
+**Only M0's rows are a result.** Every other label is the baseline's own output, so its 100% on them is by construction: those rows check the harness (every silver item reproduces its own after-text from the files it carries), not the baseline. M0's after-texts were written by hand, independently of the baseline, and the harness gives what `engine/replay.py` does: 12 of 16 exact, 15 the same words. They're in-sample, since M1's rules were written on them. The baseline's row by IndiaAmend-200's strata waits for T21, and the UK held-out set's for T22.
+
+**Two items show no law to target.** The IBC's 2021 Act s.8 inserts Chapter III-A after Chapter III of Part II, and the Arbitration Act's 2019 Act s.10 inserts Part IA after Part I. The input shows the files a provision names by section, article or Schedule, and these name only a Chapter or Part, so they show none; the baseline's target (s.54, s.43) is outside the input and the harness counts them invalid. Both are unchecked (`shown` false), so no silver example is affected. T19's input should show the named Chapter's or Part's last section before IndiaAmend-200 is drawn.
+
+Not built yet, and when: money per Act at a reference price with T26, which states one; whole-set numbers reweighted to the held-out Acts' failure rate (decision 3) with T21's strata; act-level exact match stays in `engine/reconstruct.py`.

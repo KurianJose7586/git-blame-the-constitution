@@ -368,3 +368,20 @@ def test_baseline_misses_rather_than_half_applies():
     ops, _ = baseline('In section 5 of the principal Act,—\n(h) in clause (8),—\n(A) for the word "a", the word "b" '
                       'shall be substituted;\n(i) in clause (9), for the word "c", the word "d" shall be substituted.')
     assert [o["target"] for o in ops] == ["s.5(8)", "s.5(9)"]
+
+
+def test_the_harness_scores_the_law_produced():
+    """M2.md T24: exact match on the law after the output, validity, unintended changes, and edit F1 beside them."""
+    from run import main, score
+    gold = [{"op": "SUBSTITUTE_WORDS", "target": "art.15(2)(a)", "old": "shops", "new": "markets"}]
+    item = {"output": json.dumps(gold), "before": F, "after": apply(F, gold)}
+    assert score(item, json.dumps(gold)) == {"valid": True, "exact": True, "words": True, "unintended": False,
+                                             "ops": 1, "gold_ops": 1, "matched": 1}
+    loose = score(item, json.dumps([{**gold[0], "target": "art.15"}]))  # the same law by another op: exact, not F1
+    assert loose["exact"] and loose["matched"] == 0
+    drift = score(item, json.dumps(gold + [{"op": "SUBSTITUTE_WORDS", "target": "art.15(1)", "old": "citizen", "new": "person"}]))
+    assert drift["valid"] and drift["unintended"] and not drift["exact"]
+    for bad in ("not JSON", '{"op": "OMIT_NODE"}', json.dumps([{**gold[0], "target": "art.99"}])):
+        assert score(item, bad)["valid"] is False and score(item, bad)["unintended"] is None
+    rows = main(["regex", str(ROOT / "history" / "constitution.yaml"), str(ROOT / "history" / "rti-act.yaml"), "--runs", "1"])
+    assert len(rows) == 16 and sum(r["exact"] for r in rows) == 12  # as engine/replay.py has it
